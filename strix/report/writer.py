@@ -220,11 +220,31 @@ def atomic_write_text(path: Path, payload: str) -> None:
     tmp_path.replace(path)
 
 
+_SEVERITY_CN = {
+    "CRITICAL": "严重",
+    "HIGH": "高",
+    "MEDIUM": "中",
+    "LOW": "低",
+    "INFO": "信息",
+    "UNKNOWN": "未知",
+}
+_CONFIDENCE_CN = {"HIGH": "高", "MEDIUM": "中", "LOW": "低", "UNKNOWN": "未知"}
+_FIX_EFFORT_CN = {"TRIVIAL": "极低", "LOW": "低", "MEDIUM": "中", "HIGH": "高", "UNKNOWN": "未知"}
+
+
+def _cn_label(value: Any, mapping: dict[str, str]) -> str:
+    """Display-only translation of a protocol enum; unknown values pass through."""
+    raw = str(value or "").strip()
+    if not raw:
+        return "未知"
+    return mapping.get(raw.upper(), raw)
+
+
 def render_vulnerability_md(report: dict[str, Any]) -> str:  # noqa: PLR0912, PLR0915
     lines: list[str] = [
         f"# {report.get('title', '未命名漏洞')}\n",
         f"**ID:** {report.get('id', '未知')}",
-        f"**严重程度:** {report.get('severity', '未知').upper()}",
+        f"**严重程度:** {_cn_label(report.get('severity'), _SEVERITY_CN)}",
         f"**发现时间:** {report.get('timestamp', '未知')}",
     ]
 
@@ -251,9 +271,9 @@ def render_vulnerability_md(report: dict[str, Any]) -> str:  # noqa: PLR0912, PL
     if dep_meta.get("contextual_cvss_vector"):
         metadata.append(("上下文 CVSS 向量", dep_meta["contextual_cvss_vector"]))
     if report.get("confidence"):
-        metadata.append(("置信度", str(report["confidence"]).title()))
+        metadata.append(("置信度", _cn_label(report["confidence"], _CONFIDENCE_CN)))
     if report.get("fix_effort"):
-        metadata.append(("修复工作量", str(report["fix_effort"]).title()))
+        metadata.append(("修复工作量", _cn_label(report["fix_effort"], _FIX_EFFORT_CN)))
     for label, value in metadata:
         if value:
             lines.append(f"**{label}:** {value}")
