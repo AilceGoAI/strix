@@ -34,7 +34,7 @@ func listSeverityColor(severity string) lipgloss.Color {
 // authorLabel ports reporting_renderer._author_label.
 func authorLabel(report map[string]any) string {
 	if by, ok := report["by_you"].(bool); ok && by {
-		return "you"
+		return "你"
 	}
 	return strings.TrimSpace(StringValue(report["agent_name"]))
 }
@@ -43,7 +43,7 @@ func reportSummaryLine(b *strings.Builder, report map[string]any, prefix string)
 	id := strings.TrimSpace(StringValue(report["id"]))
 	title := strings.TrimSpace(StringValue(report["title"]))
 	if title == "" {
-		title = "(untitled)"
+		title = "(无标题)"
 	}
 	severity := strings.TrimSpace(StringValue(report["severity"]))
 	b.WriteString(prefix)
@@ -61,7 +61,7 @@ func reportSummaryLine(b *strings.Builder, report map[string]any, prefix string)
 
 func renderListReports(result any) string {
 	var b strings.Builder
-	b.WriteString(Col(Red).Render("◆ ") + Dim().Render("reports"))
+	b.WriteString(Col(Red).Render("◆ ") + Dim().Render("报告"))
 
 	if text, ok := result.(string); ok && strings.TrimSpace(text) != "" {
 		b.WriteString("\n  " + Dim().Render(strings.TrimSpace(text)))
@@ -71,7 +71,7 @@ func renderListReports(result any) string {
 	resultMap, _ := result.(map[string]any)
 	success, _ := resultMap["success"].(bool)
 	if !success {
-		b.WriteString("\n  " + Dim().Render("Loading..."))
+		b.WriteString("\n  " + Dim().Render("加载中…"))
 		return b.String()
 	}
 
@@ -89,7 +89,7 @@ func renderListReports(result any) string {
 
 	reports, _ := resultMap["reports"].([]any)
 	if len(reports) == 0 {
-		b.WriteString("\n  " + Dim().Render("No reports filed yet"))
+		b.WriteString("\n  " + Dim().Render("尚未提交报告"))
 		return b.String()
 	}
 	for _, raw := range reports {
@@ -104,7 +104,7 @@ func renderListReports(result any) string {
 
 func renderGetReport(result any) string {
 	var b strings.Builder
-	b.WriteString(Col(Red).Render("◆ ") + Dim().Render("report read"))
+	b.WriteString(Col(Red).Render("◆ ") + Dim().Render("已读取报告"))
 
 	resultMap, _ := result.(map[string]any)
 	success, _ := resultMap["success"].(bool)
@@ -115,7 +115,7 @@ func renderGetReport(result any) string {
 			detail = StringValue(resultMap["error"])
 		}
 		if detail == "" {
-			detail = "Loading..."
+			detail = "加载中…"
 		}
 		b.WriteString("\n  " + Dim().Render(detail))
 		return b.String()

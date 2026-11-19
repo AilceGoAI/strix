@@ -233,14 +233,13 @@ export function AgentTranscript({
             <span className="font-mono text-xs text-[#555]">{agent.id}</span>
           </div>
           <p className="text-xs text-[#666] mb-4">
-            {msgCount} message{msgCount === 1 ? "" : "s"} · {toolCount} tool call
-            {toolCount === 1 ? "" : "s"}
+            {msgCount} 条消息 · {toolCount} 次工具调用
           </p>
         </>
       )}
 
       {mine.length === 0 ? (
-        <p className="text-sm text-[#666]">No recorded activity for this agent.</p>
+        <p className="text-sm text-[#666]">此智能体没有记录到任何活动。</p>
       ) : (
         <div className="py-1">
           {mine.map((event, i) => {

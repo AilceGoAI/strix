@@ -107,11 +107,11 @@ func (m Model) panelTop(panel sidebarPanel) int {
 func (m Model) panelTitle(panel sidebarPanel) string {
 	switch panel {
 	case panelAgents:
-		return fmt.Sprintf("Agents (%d)", len(m.snapshot.Agents))
+		return fmt.Sprintf("智能体（%d）", len(m.snapshot.Agents))
 	case panelFindings:
-		return fmt.Sprintf("Findings (%d)", len(m.snapshot.Vulnerabilities))
+		return fmt.Sprintf("发现（%d）", len(m.snapshot.Vulnerabilities))
 	case panelMcp:
-		return fmt.Sprintf("MCP (%d)", len(m.snapshot.Connections))
+		return fmt.Sprintf("MCP（%d）", len(m.snapshot.Connections))
 	default:
 		return m.snapshot.Model
 	}

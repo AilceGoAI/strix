@@ -47,11 +47,11 @@ COVERAGE_SCHEMA_VERSION = 1
 
 #: Ledger outcomes rendered for a reader who has never seen our enum.
 OUTCOME_LABELS: dict[str, str] = {
-    "reported": "Finding reported",
-    "no_issue_found": "No issue identified",
-    "ruled_out": "Ruled out",
-    "not_applicable": "Not applicable",
-    "needs_follow_up": "Requires further review",
+    "reported": "已报告发现",
+    "no_issue_found": "未发现问题",
+    "ruled_out": "已排除",
+    "not_applicable": "不适用",
+    "needs_follow_up": "需要进一步审查",
 }
 
 #: Statuses that mean the agent stopped early rather than finishing its task.
@@ -258,9 +258,9 @@ def skill_coverage_gaps(
                 "kind": "unrecorded_risk_class",
                 "risk_area": skill.replace("_", " "),
                 "detail": (
-                    f"Agent(s) {', '.join(sorted(set(agent_names)))} were assigned the "
-                    f"'{skill}' skill, but no coverage entry records this class being "
-                    "assessed. Treat it as unexamined, not as clean."
+                    f"智能体 {', '.join(sorted(set(agent_names)))} 被分配了 "
+                    f"'{skill}' 技能，但没有任何覆盖条目记录该类别经过评估。"
+                    "应将其视为未检查，而不是没有问题。"
                 ),
             }
         )
@@ -288,9 +288,8 @@ def _silent_agent_gaps(
                 "kind": "agent_recorded_no_coverage",
                 "agent_name": agent["agent_name"],
                 "detail": (
-                    f"{agent['agent_name']} ran (status: {agent['status']}) without "
-                    "recording any coverage. Whatever it examined is absent from this "
-                    "record."
+                    f"{agent['agent_name']} 运行过（状态：{agent['status']}），"
+                    "但未记录任何覆盖情况。它检查过的内容都不在本次记录中。"
                 ),
             }
         )
@@ -304,7 +303,7 @@ def _unresolved_gaps(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "kind": "needs_follow_up",
             "surface": entry.get("surface", ""),
             "risk_area": entry.get("risk_area", ""),
-            "detail": str(entry.get("evidence") or "Left open without a stated reason."),
+            "detail": str(entry.get("evidence") or "未说明原因即保持开放。"),
         }
         for entry in entries
         if entry.get("outcome") == "needs_follow_up"
@@ -328,20 +327,17 @@ def _completeness(
 
     if status in _INCOMPLETE_RUN_STATUSES:
         caveats.append(
-            f"The scan ended with status '{status}' rather than completing, so coverage "
-            "reflects only the work finished before it stopped."
+            f"扫描以状态 '{status}' 结束，而非正常完成，因此覆盖情况只反映停止前已完成的工作。"
         )
     unfinished = [agent for agent in agents if agent["status"] in _INCOMPLETE_AGENT_STATUSES]
     if unfinished:
         names = ", ".join(sorted(str(agent["agent_name"]) for agent in unfinished))
         caveats.append(
-            f"{len(unfinished)} agent(s) did not finish cleanly ({names}); any surface they "
-            "held is under-covered."
+            f"{len(unfinished)} 个智能体未能干净收尾（{names}）；它们负责的评估面覆盖不足。"
         )
     if exit_reason and exit_reason not in {"finished_by_tool", "completed"}:
         caveats.append(
-            f"The run terminated via '{exit_reason}' rather than the root agent finishing, "
-            "so remaining scope was not reached."
+            f"本次运行通过 '{exit_reason}' 终止，而非根智能体自行完成，因此剩余范围未被覆盖。"
         )
 
     return {

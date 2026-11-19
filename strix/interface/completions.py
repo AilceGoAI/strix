@@ -33,8 +33,8 @@ def run_completions(argv: list[str]) -> int:
         return 0
     if not argv or argv[0] in ("-h", "--help", "help"):
         sys.stdout.write(
-            "Usage: strix completions <zsh|bash|fish>\n\n"
-            "Enable tab completion for the current shell:\n"
+            "用法：strix completions <zsh|bash|fish>\n\n"
+            "为当前 shell 启用 Tab 补全：\n"
             "  zsh:  source <(strix completions zsh)\n"
             "  bash: source <(strix completions bash)\n"
             "  fish: strix completions fish | source\n"

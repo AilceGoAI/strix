@@ -15,7 +15,7 @@ export default function WaitForUserRenderer({ args }: ToolRendererProps) {
     <div>
       {message && <Markdown text={message} />}
       <div className={message ? "mt-1.5 text-[#888] text-[13px]" : "text-[#888] text-[13px]"}>
-        waiting for your reply
+        等待你的回复
       </div>
     </div>
   );

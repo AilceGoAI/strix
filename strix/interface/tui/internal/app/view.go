@@ -68,20 +68,20 @@ func (m *Model) chatContent() string {
 	if len(m.snapshot.Agents) == 0 {
 		switch m.snapshot.ScanState {
 		case "failed":
-			message := "Scan failed"
+			message := "扫描失败"
 			if m.snapshot.Error != nil && strings.TrimSpace(*m.snapshot.Error) != "" {
 				detail := strings.ReplaceAll(strings.TrimSpace(*m.snapshot.Error), "\n", " ")
 				message += "\n\n" + ansi.Truncate(detail, max(1, m.viewport.Width-4), "...")
 			}
 			return centeredPlaceholder(message, m.viewport.Width, m.viewport.Height)
 		case "stopped":
-			return centeredPlaceholder("Scan stopped", m.viewport.Width, m.viewport.Height)
+			return centeredPlaceholder("扫描已停止", m.viewport.Width, m.viewport.Height)
 		case "completed":
-			return centeredPlaceholder("Scan completed", m.viewport.Width, m.viewport.Height)
+			return centeredPlaceholder("扫描已完成", m.viewport.Width, m.viewport.Height)
 		case "preparing":
-			return centeredPlaceholder("Preparing scan...", m.viewport.Width, m.viewport.Height)
+			return centeredPlaceholder("正在准备扫描…", m.viewport.Width, m.viewport.Height)
 		default:
-			return centeredPlaceholder("Loading...", m.viewport.Width, m.viewport.Height)
+			return centeredPlaceholder("加载中…", m.viewport.Width, m.viewport.Height)
 		}
 	}
 	if m.selectedAgent >= len(m.snapshot.Agents) {
@@ -131,7 +131,7 @@ func (m *Model) chatContent() string {
 	}
 	m.eventSpans = spans
 	if len(blocks) == 0 {
-		return centeredPlaceholder("Starting agent...", m.viewport.Width, m.viewport.Height)
+		return centeredPlaceholder("正在启动智能体…", m.viewport.Width, m.viewport.Height)
 	}
 	return indentLines(strings.Join(blocks, "\n\n"), " ")
 }
@@ -278,7 +278,7 @@ func (m Model) viewInner() string {
 		return m.splashView()
 	}
 	if !m.ready {
-		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, lipgloss.NewStyle().Foreground(dim).Render("Connecting to Strix…"), lipgloss.WithWhitespaceBackground(black))
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, lipgloss.NewStyle().Foreground(dim).Render("正在连接 Strix…"), lipgloss.WithWhitespaceBackground(black))
 	}
 	main := m.mainView()
 	if m.snapshot.SetupMode {
@@ -408,7 +408,7 @@ var baseColorRestorer = strings.NewReplacer(
 )
 
 func (m Model) splashView() string {
-	shine := "Starting Strix Agent"
+	shine := "正在启动 Strix 智能体"
 	chars := []rune(shine)
 	pos := m.splashFrame % (len(chars) + 8)
 	var start strings.Builder
@@ -431,11 +431,11 @@ func (m Model) splashView() string {
 		}
 		start.WriteString(lipgloss.NewStyle().Foreground(color).Bold(bold).Render(string(char)))
 	}
-	welcome := lipgloss.NewStyle().Bold(true).Foreground(white).Render("Welcome to ") +
+	welcome := lipgloss.NewStyle().Bold(true).Foreground(white).Render("欢迎使用 ") +
 		lipgloss.NewStyle().Bold(true).Foreground(green).Render("Strix") +
-		lipgloss.NewStyle().Bold(true).Foreground(white).Render("!")
+		lipgloss.NewStyle().Bold(true).Foreground(white).Render("！")
 	version := lipgloss.NewStyle().Foreground(white).Faint(true).Render("v" + appVersion)
-	tagline := lipgloss.NewStyle().Foreground(white).Faint(true).Render("Open-source AI hackers for your apps")
+	tagline := lipgloss.NewStyle().Foreground(white).Faint(true).Render("为你的应用打造的开源 AI 黑客")
 	url := lipgloss.NewStyle().Bold(true).Foreground(green).Render("strix.ai")
 	// The wordmark is shared with the launch screen so the two read as one moment.
 	content := wordmark() + "\n\n" +
@@ -693,17 +693,17 @@ func (m Model) viewerContentWidth() int {
 func (m Model) viewerView(width int) string {
 	switch m.snapshot.ViewerStatus {
 	case "running":
-		status := lipgloss.NewStyle().Foreground(green).Render("● Viewer running")
+		status := lipgloss.NewStyle().Foreground(green).Render("● 查看器运行中")
 		if m.snapshot.ViewerURL != nil && strings.TrimSpace(*m.snapshot.ViewerURL) != "" {
 			return status + "\n" + hyperlinkBlock(strings.TrimSpace(*m.snapshot.ViewerURL), width, lipgloss.NewStyle().Foreground(dim))
 		}
 		return status
 	case "unavailable":
-		return truncate(lipgloss.NewStyle().Foreground(amber).Render("Viewer UI not built"), width)
+		return truncate(lipgloss.NewStyle().Foreground(amber).Render("查看器界面未构建"), width)
 	case "failed":
-		return truncate(lipgloss.NewStyle().Foreground(red).Render("Viewer failed to start"), width)
+		return truncate(lipgloss.NewStyle().Foreground(red).Render("查看器启动失败"), width)
 	default:
-		return truncate(lipgloss.NewStyle().Foreground(textColor).Render("▶ Watch live in browser"), width)
+		return truncate(lipgloss.NewStyle().Foreground(textColor).Render("▶ 在浏览器中实时查看"), width)
 	}
 }
 
@@ -717,14 +717,14 @@ func (m Model) statsView() string {
 		if b.Len() > 0 {
 			b.WriteString("\n")
 		}
-		b.WriteString(lipgloss.NewStyle().Foreground(green).Render("ChatGPT subscription"))
+		b.WriteString(lipgloss.NewStyle().Foreground(green).Render("ChatGPT 订阅"))
 	}
 	total := numberValue(m.snapshot.Usage["total_tokens"])
 	if total > 0 {
 		if b.Len() > 0 {
 			b.WriteString("\n")
 		}
-		b.WriteString(w.Render(fmt.Sprintf("%s tokens", formatCount(total))))
+		b.WriteString(w.Render(fmt.Sprintf("%s 个 token", formatCount(total))))
 		if cost := floatValue(m.snapshot.Usage["cost"]); !m.snapshot.Subscription && cost > 0 {
 			b.WriteString(w.Render(fmt.Sprintf(" · $%.2f", cost)))
 		}
@@ -772,7 +772,7 @@ func (m Model) mcpConnectionsView(width, rows int) string {
 		switch {
 		case conn.Dead:
 			glyph = lipgloss.NewStyle().Foreground(red).Render("●")
-			right = lipgloss.NewStyle().Foreground(red).Render("offline")
+			right = lipgloss.NewStyle().Foreground(red).Render("离线")
 		case inUse[conn.Name]:
 			glyph = lipgloss.NewStyle().Foreground(green).Render(string(frames[m.sweepFrame%len(frames)]))
 			right = lipgloss.NewStyle().Foreground(dim).Render(toolsLabel(conn.ToolCount))
@@ -835,9 +835,9 @@ func (m Model) mcpInUse() map[string]bool {
 
 func toolsLabel(count int) string {
 	if count == 1 {
-		return "1 tool"
+		return "1 个工具"
 	}
-	return fmt.Sprintf("%d tools", count)
+	return fmt.Sprintf("%d 个工具", count)
 }
 
 func numberValue(value any) int64 {
@@ -882,34 +882,34 @@ func (m Model) statusView(width int) string {
 	left, right := "", ""
 	if len(m.snapshot.Agents) > 0 && !m.snapshot.SetupMode {
 		agent := m.snapshot.Agents[m.selectedAgent]
-		quitHint := lipgloss.NewStyle().Foreground(white).Render("ctrl-q") + lipgloss.NewStyle().Foreground(dim).Render(" ") + lipgloss.NewStyle().Foreground(dim).Render("quit")
+		quitHint := lipgloss.NewStyle().Foreground(white).Render("ctrl-q") + lipgloss.NewStyle().Foreground(dim).Render(" ") + lipgloss.NewStyle().Foreground(dim).Render("退出")
 		switch agent.Status {
 		case "running":
 			if m.agentHasEvents(agent.ID) {
-				left = m.sweepView() + lipgloss.NewStyle().Foreground(white).Render("esc") + lipgloss.NewStyle().Foreground(dim).Render(" ") + lipgloss.NewStyle().Foreground(dim).Render("stop")
+				left = m.sweepView() + lipgloss.NewStyle().Foreground(white).Render("esc") + lipgloss.NewStyle().Foreground(dim).Render(" ") + lipgloss.NewStyle().Foreground(dim).Render("停止")
 			} else {
-				left = m.sweepView() + lipgloss.NewStyle().Foreground(white).Render("Initializing")
+				left = m.sweepView() + lipgloss.NewStyle().Foreground(white).Render("初始化中")
 			}
 			right = quitHint
 		case "waiting":
-			left = lipgloss.NewStyle().Foreground(dim).Render("Send message to resume")
+			left = lipgloss.NewStyle().Foreground(dim).Render("发送消息以继续")
 			if msg := agent.ErrorMessage; msg != "" {
-				left = statusMessage(msg, red, " · Send message to resume", width)
+				left = statusMessage(msg, red, " · 发送消息以继续", width)
 			}
 		case "budget_paused":
-			left = lipgloss.NewStyle().Foreground(amber).Render("Budget limit reached") +
-				lipgloss.NewStyle().Foreground(dim).Render(" · Send a message to continue")
+			left = lipgloss.NewStyle().Foreground(amber).Render("已达预算上限") +
+				lipgloss.NewStyle().Foreground(dim).Render(" · 发送消息以继续")
 			right = quitHint
 		case "completed":
-			left = lipgloss.NewStyle().Foreground(mid).Render("Agent completed")
+			left = lipgloss.NewStyle().Foreground(mid).Render("智能体已完成")
 		case "stopped":
-			left = lipgloss.NewStyle().Foreground(mid).Render("Agent stopped")
+			left = lipgloss.NewStyle().Foreground(mid).Render("智能体已停止")
 		case "failed", "crashed":
 			msg := agent.ErrorMessage
 			if msg == "" {
-				msg = "Agent failed"
+				msg = "智能体已失败"
 			}
-			left = statusMessage(msg, red, " · Send message to resume", width)
+			left = statusMessage(msg, red, " · 发送消息以继续", width)
 		}
 	}
 	if m.errorText != "" {

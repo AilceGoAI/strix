@@ -30,7 +30,7 @@ function cap(s: string | null): string | null {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 function fmtDuration(seconds: number | null): string {
-  if (seconds == null || seconds < 0) return "n/a";
+  if (seconds == null || seconds < 0) return "无";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
@@ -60,7 +60,7 @@ export function RunDetails({
   // Configuration (launch inputs)
   const targets = arr(raw.targets_info).map((t) => {
     const o = rec(t);
-    const display = str(o.original) ?? str(rec(o.details).target_url) ?? "unknown target";
+    const display = str(o.original) ?? str(rec(o.details).target_url) ?? "未知目标";
     const type = str(o.type);
     return { display, type: type ? humanize(type) : null };
   });
@@ -115,7 +115,7 @@ export function RunDetails({
         className="flex w-full cursor-pointer items-center gap-2 text-left"
       >
         <Info className="h-4 w-4 text-[#888]" aria-hidden="true" />
-        <h2 className="text-sm font-semibold text-white">Run details</h2>
+        <h2 className="text-sm font-semibold text-white">运行详情</h2>
         {open ? (
           <ChevronUp className="ml-auto h-4 w-4 text-[#666]" aria-hidden="true" />
         ) : (
@@ -127,11 +127,11 @@ export function RunDetails({
       <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
         <section>
           <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#555]">
-            Configuration
+            配置
           </h3>
           <dl className="space-y-2.5">
             {targets.length > 0 && (
-              <Field label="Targets">
+              <Field label="目标">
                 <div className="space-y-1">
                   {targets.map((t, i) => (
                     <div key={i} className="flex flex-wrap items-center gap-2">
@@ -146,18 +146,18 @@ export function RunDetails({
                 </div>
               </Field>
             )}
-            <Field label="Instruction">
+            <Field label="指令">
               {instruction ? (
                 <span className="whitespace-pre-wrap">{instruction}</span>
               ) : (
-                <span className="text-[#666]">None</span>
+                <span className="text-[#666]">无</span>
               )}
             </Field>
-            {scanMode && <Field label="Pentest mode">{scanMode}</Field>}
-            <Field label="Scope">{scope}</Field>
-            <Field label="Mode">{nonInteractive ? "Non-interactive" : "Interactive"}</Field>
+            {scanMode && <Field label="渗透测试模式">{scanMode}</Field>}
+            <Field label="范围">{scope}</Field>
+            <Field label="模式">{nonInteractive ? "非交互" : "交互"}</Field>
             {localSources.length > 0 && (
-              <Field label="Local sources">
+              <Field label="本地来源">
                 <div className="space-y-0.5 font-mono text-[#ddd]">
                   {localSources.map((s, i) => (
                     <div key={i}>{s}</div>
@@ -165,53 +165,53 @@ export function RunDetails({
                 </div>
               </Field>
             )}
-            {status && <Field label="Status">{status}</Field>}
+            {status && <Field label="状态">{status}</Field>}
           </dl>
         </section>
 
         <section>
           <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#555]">
-            Usage &amp; cost
+            用量与费用
           </h3>
           {hasUsage ? (
             <dl className="space-y-2.5 tabular-nums">
-              <Field label="Model">{models.length ? models.join(", ") : "n/a"}</Field>
+              <Field label="模型">{models.length ? models.join(", ") : "无"}</Field>
               {subscription && (
-                <Field label="Provider">
+                <Field label="提供商">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="rounded-full border border-[#22c55e]/40 bg-[#22c55e]/10 px-2 py-0.5 text-[11px] text-[#22c55e]">
-                      ChatGPT subscription
+                      ChatGPT 订阅
                     </span>
                   </span>
                 </Field>
               )}
-              <Field label="Run time">{fmtDuration(durationSeconds)}</Field>
-              {requests != null && <Field label="Requests">{formatNumber(requests)}</Field>}
+              <Field label="运行时长">{fmtDuration(durationSeconds)}</Field>
+              {requests != null && <Field label="请求数">{formatNumber(requests)}</Field>}
               {inputTokens != null && (
-                <Field label="Input tokens">
+                <Field label="输入 token">
                   {formatNumber(inputTokens)}
-                  {cached != null && sub(cached, "cached")}
+                  {cached != null && sub(cached, "已缓存")}
                 </Field>
               )}
               {outputTokens != null && (
-                <Field label="Output tokens">
+                <Field label="输出 token">
                   {formatNumber(outputTokens)}
-                  {reasoning != null && sub(reasoning, "reasoning")}
+                  {reasoning != null && sub(reasoning, "推理")}
                 </Field>
               )}
-              {totalTokens != null && <Field label="Total tokens">{formatNumber(totalTokens)}</Field>}
+              {totalTokens != null && <Field label="token 总数">{formatNumber(totalTokens)}</Field>}
               {subscription ? (
-                <Field label="Cost">
+                <Field label="费用">
                   <span className="text-[#22c55e]">$0.00</span>
-                  <span className="text-[#666]"> (subscription)</span>
+                  <span className="text-[#666]"> （订阅）</span>
                 </Field>
               ) : (
-                cost != null && <Field label="Cost">${cost.toFixed(2)}</Field>
+                cost != null && <Field label="费用">${cost.toFixed(2)}</Field>
               )}
-              {agents.length > 0 && <Field label="Agents">{formatNumber(agents.length)}</Field>}
+              {agents.length > 0 && <Field label="智能体">{formatNumber(agents.length)}</Field>}
             </dl>
           ) : (
-            <p className="text-sm text-[#666]">Not available yet.</p>
+            <p className="text-sm text-[#666]">暂无数据。</p>
           )}
         </section>
       </div>

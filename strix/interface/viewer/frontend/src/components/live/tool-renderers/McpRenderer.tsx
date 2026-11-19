@@ -109,10 +109,10 @@ export default function McpRenderer({
     <div>
       <div className="flex items-center gap-2 flex-wrap">
         {listing ? (
-          <span className="text-[13px] text-[#555]">Listing connected MCP servers</span>
+          <span className="text-[13px] text-[#555]">正在列出已连接的 MCP 服务器</span>
         ) : inspecting ? (
           <>
-            <span className="text-[13px] text-[#555]">Inspecting MCP server</span>
+            <span className="text-[13px] text-[#555]">正在检查 MCP 服务器</span>
             {mcpConnection && (
               <span className="font-mono text-teal-300 font-semibold text-sm">{mcpConnection}</span>
             )}
@@ -122,7 +122,7 @@ export default function McpRenderer({
             <span className="font-mono text-teal-300 font-semibold text-sm">
               {mcpTool || toolName}
             </span>
-            <span className="text-[13px] text-[#555]">via MCP server</span>
+            <span className="text-[13px] text-[#555]">经由 MCP 服务器</span>
             {mcpConnection && <span className="text-[13px] text-teal-400/80">{mcpConnection}</span>}
           </>
         )}
@@ -144,12 +144,12 @@ export default function McpRenderer({
             <div key={entry.name} className={`break-all${entry.dead ? " opacity-50" : ""}`}>
               <span className="text-teal-300">{entry.name}</span>
               {entry.dead ? (
-                <span className="text-red-400/80"> · offline</span>
+                <span className="text-red-400/80"> · 离线</span>
               ) : (
                 entry.toolCount !== null && (
                   <span className="text-[#555]">
                     {" "}
-                    · {entry.toolCount} {entry.toolCount === 1 ? "tool" : "tools"}
+                    · {entry.toolCount} 个工具
                   </span>
                 )
               )}
@@ -159,9 +159,9 @@ export default function McpRenderer({
       )}
 
       <div className="mt-1 text-[13px]">
-        {status === "running" && <span className="text-[#666]">Running</span>}
-        {status === "completed" && <span className="text-emerald-400/80">✓ Done</span>}
-        {failed && <span className="text-red-400/80">✗ Failed</span>}
+        {status === "running" && <span className="text-[#666]">运行中</span>}
+        {status === "completed" && <span className="text-emerald-400/80">✓ 完成</span>}
+        {failed && <span className="text-red-400/80">✗ 失败</span>}
       </div>
 
       {error && (

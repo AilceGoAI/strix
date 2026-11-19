@@ -50,7 +50,7 @@ export default function VulnReportRenderer({ args, result }: ToolRendererProps) 
         {cwe && <span className="text-[#888] font-mono text-[13px]">{cwe}</span>}
         {confidence && (
           <span className={`text-[13px] ${CONFIDENCE_COLORS[confidence] ?? "text-[#888]"}`}>
-            {confidence} confidence
+            {confidence} 置信度
           </span>
         )}
       </div>
@@ -61,13 +61,13 @@ export default function VulnReportRenderer({ args, result }: ToolRendererProps) 
       {description && <TruncatedText text={description} maxLines={20} />}
       {impact && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Impact</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">影响</span>
           <div className="mt-1"><TruncatedText text={impact} maxLines={15} /></div>
         </div>
       )}
       {technicalAnalysis && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Technical Analysis</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">技术分析</span>
           <div className="mt-1"><TruncatedText text={technicalAnalysis} maxLines={20} /></div>
         </div>
       )}
@@ -78,26 +78,26 @@ export default function VulnReportRenderer({ args, result }: ToolRendererProps) 
           triages this needs both to decide whether to act. */}
       {counterevidence && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Counterevidence</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">反证</span>
           <div className="mt-1"><TruncatedText text={counterevidence} maxLines={12} /></div>
         </div>
       )}
       {severityChangeConditions && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Severity would change if</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">以下情况会改变严重程度</span>
           <div className="mt-1"><TruncatedText text={severityChangeConditions} maxLines={10} /></div>
         </div>
       )}
       {(pocDescription || pocCode) && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Proof of Concept</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">概念验证（PoC）</span>
           {pocDescription && <div className="mt-1"><Markdown text={pocDescription} /></div>}
           {pocCode && <MdCodeBlock className={pocLang ? `language-${pocLang}` : undefined}>{pocCode}</MdCodeBlock>}
         </div>
       )}
       {remediation && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Remediation</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">修复建议</span>
           <div className="mt-1"><TruncatedText text={remediation} maxLines={15} /></div>
         </div>
       )}
@@ -105,7 +105,7 @@ export default function VulnReportRenderer({ args, result }: ToolRendererProps) 
           verified belongs next to it. */}
       {fixVerification && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Fix verification</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">修复验证</span>
           <div className="mt-1"><TruncatedText text={fixVerification} maxLines={12} /></div>
         </div>
       )}

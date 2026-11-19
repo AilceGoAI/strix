@@ -42,8 +42,8 @@ def validate_environment() -> None:
     if codex.subscription_model(settings.llm.model):
         if not codex.is_authenticated():
             console.print(
-                f"[red]STRIX_LLM={settings.llm.model} uses your ChatGPT subscription, "
-                "but you're not signed in.[/] Run [cyan]strix auth login chatgpt[/] first."
+                f"[red]STRIX_LLM={settings.llm.model} 使用你的 ChatGPT 订阅，"
+                "但你尚未登录。[/] 请先运行 [cyan]strix auth login chatgpt[/]。"
             )
             report_error("subscription_not_signed_in")
             sys.exit(1)
@@ -63,64 +63,64 @@ def validate_environment() -> None:
 
     if missing_required_vars:
         error_text = Text()
-        error_text.append("MISSING REQUIRED ENVIRONMENT VARIABLES", style="bold red")
+        error_text.append("缺少必需的环境变量", style="bold red")
         error_text.append("\n\n", style="white")
 
         for var in missing_required_vars:
             error_text.append(f"• {var}", style="bold yellow")
-            error_text.append(" is not set\n", style="white")
+            error_text.append(" 未设置\n", style="white")
 
         if missing_optional_vars:
-            error_text.append("\nOptional environment variables:\n", style="dim white")
+            error_text.append("\n可选环境变量：\n", style="dim white")
             for var in missing_optional_vars:
                 error_text.append(f"• {var}", style="dim yellow")
-                error_text.append(" is not set\n", style="dim white")
+                error_text.append(" 未设置\n", style="dim white")
 
-        error_text.append("\nRequired environment variables:\n", style="white")
+        error_text.append("\n必需环境变量：\n", style="white")
         for var in missing_required_vars:
             if var == "STRIX_LLM":
                 error_text.append("• ", style="white")
                 error_text.append("STRIX_LLM", style="bold cyan")
                 error_text.append(
-                    " - Model name to use (e.g., 'openrouter/z-ai/glm-5.3' or "
-                    "'anthropic/claude-opus-4-7')\n",
+                    " - 使用的模型名称（例如 'openrouter/z-ai/glm-5.3' 或 "
+                    "'anthropic/claude-opus-4-7'）\n",
                     style="white",
                 )
 
         if missing_optional_vars:
-            error_text.append("\nOptional environment variables:\n", style="white")
+            error_text.append("\n可选环境变量：\n", style="white")
             for var in missing_optional_vars:
                 if var == "LLM_API_BASE":
                     error_text.append("• ", style="white")
                     error_text.append("LLM_API_BASE", style="bold cyan")
                     error_text.append(
-                        " - Custom API base URL if using local models (e.g., Ollama, LMStudio)\n",
+                        " - 使用本地模型时的自定义 API 基础 URL（例如 Ollama、LMStudio）\n",
                         style="white",
                     )
                 elif var == "PERPLEXITY_API_KEY":
                     error_text.append("• ", style="white")
                     error_text.append("PERPLEXITY_API_KEY", style="bold cyan")
                     error_text.append(
-                        " - API key for Perplexity AI web search (alternative to Exa)\n",
+                        " - Perplexity AI 网页搜索的 API key（Exa 的替代方案）\n",
                         style="white",
                     )
                 elif var == "EXA_API_KEY":
                     error_text.append("• ", style="white")
                     error_text.append("EXA_API_KEY", style="bold cyan")
                     error_text.append(
-                        " - API key for Exa web search (enables real-time research)\n",
+                        " - Exa 网页搜索的 API key（启用实时调研）\n",
                         style="white",
                     )
                 elif var == "STRIX_REASONING_EFFORT":
                     error_text.append("• ", style="white")
                     error_text.append("STRIX_REASONING_EFFORT", style="bold cyan")
                     error_text.append(
-                        " - Reasoning effort level: none, minimal, low, medium, high, xhigh, "
-                        "max (default: high)\n",
+                        " - 推理强度等级：none、minimal、low、medium、high、xhigh、"
+                        "max（默认：high）\n",
                         style="white",
                     )
 
-        error_text.append("\nExample setup:\n", style="white")
+        error_text.append("\n配置示例：\n", style="white")
         error_text.append("export STRIX_LLM='openrouter/z-ai/glm-5.3'\n", style="dim white")
 
         if missing_optional_vars:
@@ -128,7 +128,7 @@ def validate_environment() -> None:
                 if var == "LLM_API_BASE":
                     error_text.append(
                         "export LLM_API_BASE='http://localhost:11434'  "
-                        "# needed for local models only\n",
+                        "# 仅使用本地模型时需要\n",
                         style="dim white",
                     )
                 elif var == "PERPLEXITY_API_KEY":
@@ -168,11 +168,11 @@ def check_docker_installed() -> None:
         logger.debug("Docker CLI not found in PATH")
         console = Console()
         error_text = Text()
-        error_text.append("DOCKER NOT INSTALLED", style="bold red")
+        error_text.append("未安装 Docker", style="bold red")
         error_text.append("\n\n", style="white")
-        error_text.append("The 'docker' CLI was not found in your PATH.\n", style="white")
+        error_text.append("在 PATH 中未找到 'docker' CLI。\n", style="white")
         error_text.append(
-            "Please install Docker and ensure the 'docker' command is available.\n\n", style="white"
+            "请安装 Docker，并确保 'docker' 命令可用。\n\n", style="white"
         )
 
         panel = Panel(
@@ -202,11 +202,11 @@ def pull_docker_image() -> None:
 
     logger.info("Pulling docker image: %s", image)
     console.print()
-    console.print(f"[dim]Pulling image[/] {image}")
-    console.print("[dim yellow]This only happens on first run and may take a few minutes...[/]")
+    console.print(f"[dim]正在拉取镜像[/] {image}")
+    console.print("[dim yellow]仅在首次运行时发生，可能需要几分钟……[/]")
     console.print()
 
-    with console.status("[bold cyan]Downloading image layers...", spinner="dots") as status:
+    with console.status("[bold cyan]正在下载镜像层……", spinner="dots") as status:
         try:
             layers_info: dict[str, str] = {}
             last_update = ""
@@ -218,9 +218,9 @@ def pull_docker_image() -> None:
             logger.debug("Failed to pull docker image %s", image, exc_info=True)
             console.print()
             error_text = Text()
-            error_text.append("FAILED TO PULL IMAGE", style="bold red")
+            error_text.append("拉取镜像失败", style="bold red")
             error_text.append("\n\n", style="white")
-            error_text.append(f"Could not download: {image}\n", style="white")
+            error_text.append(f"无法下载：{image}\n", style="white")
             error_text.append(str(e), style="dim red")
 
             panel = Panel(
@@ -236,6 +236,6 @@ def pull_docker_image() -> None:
 
     logger.info("Docker image %s ready", image)
     success_text = Text()
-    success_text.append("Docker image ready", style="#22c55e")
+    success_text.append("Docker 镜像已就绪", style="#22c55e")
     console.print(success_text)
     console.print()

@@ -55,61 +55,61 @@ func vulnerabilityMarkdownReport(v map[string]any) string {
 
 	title := render.StringValue(v["title"])
 	if title == "" {
-		title = "Untitled Vulnerability"
+		title = "未命名漏洞"
 	}
 	lines = append(lines, "# "+title, "")
 
 	field := func(label, value string) {
 		if value != "" {
-			lines = append(lines, fmt.Sprintf("**%s:** %s", label, value))
+			lines = append(lines, fmt.Sprintf("**%s：** %s", label, value))
 		}
 	}
 	field("ID", render.StringValue(v["id"]))
-	field("Severity", strings.ToUpper(render.StringValue(v["severity"])))
-	field("Found", render.StringValue(v["timestamp"]))
-	field("Agent", render.StringValue(v["agent_name"]))
-	field("Target", render.StringValue(v["target"]))
+	field("严重程度", strings.ToUpper(render.StringValue(v["severity"])))
+	field("发现时间", render.StringValue(v["timestamp"]))
+	field("智能体", render.StringValue(v["agent_name"]))
+	field("目标", render.StringValue(v["target"]))
 	if dep, ok := v["dependency_metadata"].(map[string]any); ok {
-		field("Package", render.StringValue(dep["package_name"]))
-		field("Ecosystem", render.StringValue(dep["package_ecosystem"]))
-		field("Installed Version", render.StringValue(dep["installed_version"]))
-		field("Fixed Version", render.StringValue(dep["fixed_version"]))
-		field("Introduced By", render.StringValue(dep["introduced_by"]))
-		field("Dependency Chain", render.StringValue(dep["dependency_path"]))
+		field("包名", render.StringValue(dep["package_name"]))
+		field("生态", render.StringValue(dep["package_ecosystem"]))
+		field("已安装版本", render.StringValue(dep["installed_version"]))
+		field("修复版本", render.StringValue(dep["fixed_version"]))
+		field("引入者", render.StringValue(dep["introduced_by"]))
+		field("依赖链", render.StringValue(dep["dependency_path"]))
 	}
-	field("Endpoint", render.StringValue(v["endpoint"]))
-	field("Method", render.StringValue(v["method"]))
+	field("端点", render.StringValue(v["endpoint"]))
+	field("方法", render.StringValue(v["method"]))
 	field("CVE", render.StringValue(v["cve"]))
 	field("CWE", render.StringValue(v["cwe"]))
 	field("CVSS", render.StringValue(v["cvss"]))
 	if fe := render.StringValue(v["fix_effort"]); fe != "" {
-		field("Fix Effort", titleCaseWords(fe))
+		field("修复成本", titleCaseWords(fe))
 	}
 	if bd, ok := v["cvss_breakdown"].(map[string]any); ok && len(bd) > 0 {
 		if parts := render.CVSSVectorParts(bd); len(parts) > 0 {
-			field("CVSS Vector", strings.Join(parts, "/"))
+			field("CVSS 向量", strings.Join(parts, "/"))
 		}
 	}
 
 	description := render.StringValue(v["description"])
 	if description == "" {
-		description = "No description provided."
+		description = "未提供描述。"
 	}
-	lines = append(lines, "", "## Description", "", description)
+	lines = append(lines, "", "## 描述", "", description)
 
 	section := func(label, value string) {
 		if value != "" {
 			lines = append(lines, "", "## "+label, "", value)
 		}
 	}
-	section("Impact", render.StringValue(v["impact"]))
-	section("Technical Analysis", render.StringValue(v["technical_analysis"]))
-	section("Evidence", render.StringValue(v["evidence"]))
+	section("影响", render.StringValue(v["impact"]))
+	section("技术分析", render.StringValue(v["technical_analysis"]))
+	section("证据", render.StringValue(v["evidence"]))
 
 	pocDescription := render.StringValue(v["poc_description"])
 	pocScript := render.StringValue(v["poc_script_code"])
 	if pocDescription != "" || pocScript != "" {
-		lines = append(lines, "", "## Proof of Concept", "")
+		lines = append(lines, "", "## 概念验证", "")
 		if pocDescription != "" {
 			lines = append(lines, pocDescription, "")
 		}
@@ -124,7 +124,7 @@ func vulnerabilityMarkdownReport(v map[string]any) string {
 	}
 
 	if locations, ok := v["code_locations"].([]any); ok && len(locations) > 0 {
-		lines = append(lines, "", "## Code Analysis", "")
+		lines = append(lines, "", "## 代码分析", "")
 		for i, item := range locations {
 			loc, ok := item.(map[string]any)
 			if !ok {
@@ -132,17 +132,17 @@ func vulnerabilityMarkdownReport(v map[string]any) string {
 			}
 			file := render.StringValue(loc["file"])
 			if file == "" {
-				file = "unknown"
+				file = "未知"
 			}
 			lineRef := ""
 			if start := render.StringValue(loc["start_line"]); start != "" {
 				if end := render.StringValue(loc["end_line"]); end != "" && end != start {
-					lineRef = fmt.Sprintf(" (lines %s-%s)", start, end)
+					lineRef = fmt.Sprintf("（第 %s-%s 行）", start, end)
 				} else {
-					lineRef = fmt.Sprintf(" (line %s)", start)
+					lineRef = fmt.Sprintf("（第 %s 行）", start)
 				}
 			}
-			lines = append(lines, fmt.Sprintf("**Location %d:** `%s`%s", i+1, file, lineRef))
+			lines = append(lines, fmt.Sprintf("**位置 %d：** `%s`%s", i+1, file, lineRef))
 			if label := render.StringValue(loc["label"]); label != "" {
 				lines = append(lines, "  "+label)
 			}
@@ -153,7 +153,7 @@ func vulnerabilityMarkdownReport(v map[string]any) string {
 			before := render.StringValue(loc["fix_before"])
 			after := render.StringValue(loc["fix_after"])
 			if before != "" || after != "" {
-				lines = append(lines, "**Suggested Fix:**", "```diff")
+				lines = append(lines, "**建议修复：**", "```diff")
 				if before != "" {
 					for _, l := range strings.Split(before, "\n") {
 						lines = append(lines, "- "+l)
@@ -170,8 +170,8 @@ func vulnerabilityMarkdownReport(v map[string]any) string {
 		}
 	}
 
-	section("Remediation", render.StringValue(v["remediation_steps"]))
-	section("Assumptions", render.StringValue(v["assumptions"]))
+	section("修复建议", render.StringValue(v["remediation_steps"]))
+	section("假设", render.StringValue(v["assumptions"]))
 
 	lines = append(lines, "")
 	return strings.Join(lines, "\n")

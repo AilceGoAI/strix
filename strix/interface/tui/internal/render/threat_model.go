@@ -14,9 +14,9 @@ var threatModelTitles = map[string]struct {
 	loading string
 	errMsg  string
 }{
-	"get_threat_model":   {"Threat Model", "Loading...", "Unable to read threat model"},
-	"save_threat_model":  {"Threat Model Saved", "Saving...", "Failed to save threat model"},
-	"amend_threat_model": {"Threat Model Amended", "Amending...", "Failed to amend threat model"},
+	"get_threat_model":   {"威胁模型", "加载中…", "无法读取威胁模型"},
+	"save_threat_model":  {"威胁模型已保存", "正在保存…", "保存威胁模型失败"},
+	"amend_threat_model": {"威胁模型已修订", "正在修订…", "修订威胁模型失败"},
 }
 
 func renderThreatModel(name string, args map[string]any, result any) string {
@@ -49,18 +49,18 @@ func renderThreatModel(name string, args map[string]any, result any) string {
 	case "get_threat_model":
 		threatModelReadBody(&b, m)
 	case "amend_threat_model":
-		b.WriteString("\n  " + Col(Green).Render("✓ amendment recorded"))
+		b.WriteString("\n  " + Col(Green).Render("✓ 已记录修订"))
 		if count, ok := NumericValue(m["amendment_count"]); ok {
-			b.WriteString(Dim().Render(" (" + strconv.Itoa(int(count)) + " total)"))
+			b.WriteString(Dim().Render(" (共 " + strconv.Itoa(int(count)) + " 条)"))
 		}
 		threatModelBody(&b, StringValue(args["addendum"]))
 	default:
-		b.WriteString("\n  " + Col(Green).Render("✓ saved"))
+		b.WriteString("\n  " + Col(Green).Render("✓ 已保存"))
 		// Saving folds amendments away, so the count that vanished is worth
 		// stating: it is the one destructive thing this tool does.
 		if cleared, ok := NumericValue(m["amendments_cleared"]); ok && cleared > 0 {
-			b.WriteString("\n  " + Col(AmberY).Render("⚠ cleared "+
-				strconv.Itoa(int(cleared))+" amendment(s)"))
+			b.WriteString("\n  " + Col(AmberY).Render("⚠ 已清除 "+
+				strconv.Itoa(int(cleared))+" 条修订"))
 		}
 		threatModelBody(&b, StringValue(args["content"]))
 	}
@@ -69,17 +69,17 @@ func renderThreatModel(name string, args map[string]any, result any) string {
 
 func threatModelReadBody(b *strings.Builder, result map[string]any) {
 	if !truthy(result["found"]) {
-		b.WriteString("\n  " + Dim().Render("No model derived for this target yet"))
+		b.WriteString("\n  " + Dim().Render("该目标尚未生成威胁模型"))
 		return
 	}
 	if amendments, ok := result["amendments"].([]any); ok && len(amendments) > 0 {
 		b.WriteString("\n  " + Col(Gold).Render("+ "+strconv.Itoa(len(amendments))+
-			" amendment(s)") + Dim().Render(" — later statements win"))
+			" 条修订") + Dim().Render(" — 以较晚的陈述为准"))
 		for _, a := range amendments {
 			amendment, _ := a.(map[string]any)
 			who := strings.TrimSpace(StringValue(amendment["agent_name"]))
 			if who == "" {
-				who = "unknown agent"
+				who = "未知智能体"
 			}
 			b.WriteString("\n    - " + Dim().Render(who+": ") +
 				psanitize(strings.TrimSpace(StringValue(amendment["content"])), 120))

@@ -123,7 +123,7 @@ class TuiLiveView(BaseLiveView):
 
     def event_changes_since(self, cursor: int) -> tuple[int, list[dict[str, Any]]]:
         if cursor < 0 or cursor > self._event_cursor:
-            raise ValueError("event cursor is outside the available history")
+            raise ValueError("事件游标超出可用历史范围")
         changed_ids = sorted(
             (
                 (change_cursor, event_id)

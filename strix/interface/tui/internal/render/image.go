@@ -7,7 +7,7 @@ import (
 func renderViewImage(args map[string]any, result any) string {
 	path := strings.TrimSpace(StringValue(args["path"]))
 	var b strings.Builder
-	b.WriteString(Col(Emerald).Render("◇ ") + Dim().Render("view image"))
+	b.WriteString(Col(Emerald).Render("◇ ") + Dim().Render("查看图片"))
 	if path != "" {
 		if len(path) > 60 {
 			path = path[len(path)-60:]

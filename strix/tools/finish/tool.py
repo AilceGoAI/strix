@@ -28,22 +28,21 @@ def _do_finish(
         return {
             "success": False,
             "error": (
-                "This tool can only be used by the root/main agent. "
-                "If you are a subagent, use agent_finish instead"
+                "此工具只能由根（主）智能体使用。如果你是被派生的子智能体，请改用 agent_finish"
             ),
         }
 
     errors: list[str] = []
     if not executive_summary.strip():
-        errors.append("Executive summary cannot be empty")
+        errors.append("执行摘要不能为空")
     if not methodology.strip():
-        errors.append("Methodology cannot be empty")
+        errors.append("方法论不能为空")
     if not technical_analysis.strip():
-        errors.append("Technical analysis cannot be empty")
+        errors.append("技术分析不能为空")
     if not recommendations.strip():
-        errors.append("Recommendations cannot be empty")
+        errors.append("建议不能为空")
     if errors:
-        return {"success": False, "error": "Validation failed", "errors": errors}
+        return {"success": False, "error": "校验失败", "errors": errors}
 
     try:
         from strix.report.state import get_global_report_state
@@ -54,8 +53,8 @@ def _do_finish(
             return {
                 "success": True,
                 "scan_completed": True,
-                "message": "Scan completed (not persisted)",
-                "warning": "Results could not be persisted - report state unavailable",
+                "message": "扫描已完成（未持久化）",
+                "warning": "结果无法持久化 - 报告状态不可用",
             }
         report_state.update_scan_final_fields(
             executive_summary=executive_summary.strip(),
@@ -67,7 +66,7 @@ def _do_finish(
         coverage_summary = _coverage_summary(agent_graph)
     except (ImportError, AttributeError) as e:
         logger.exception("finish_scan persistence failed")
-        return {"success": False, "error": f"Failed to complete scan: {e!s}"}
+        return {"success": False, "error": f"完成扫描失败：{e!s}"}
     else:
         logger.info(
             "finish_scan: completed scan with %d vulnerability report(s)",
@@ -76,7 +75,7 @@ def _do_finish(
         result: dict[str, Any] = {
             "success": True,
             "scan_completed": True,
-            "message": "Scan completed successfully",
+            "message": "扫描已成功完成",
             "vulnerabilities_found": vuln_count,
         }
         result.update(coverage_summary)
@@ -101,9 +100,9 @@ def _coverage_summary(agent_graph: dict[str, Any]) -> dict[str, Any]:
         return {
             "coverage_recorded": 0,
             "coverage_warning": (
-                "No coverage was recorded for this scan. The report cannot show which "
-                "surfaces were reviewed and cleared — only what was found. Use "
-                "record_coverage during testing so future scans can report negative space."
+                "本次扫描未记录任何覆盖情况。报告无法显示哪些面（surface）经过审查并确认"
+                "无问题 —— 它只能展示发现了什么。请在测试过程中使用 "
+                "record_coverage，以便后续扫描能够报告已排除的范围。"
             ),
         }
 
@@ -115,9 +114,8 @@ def _coverage_summary(agent_graph: dict[str, Any]) -> dict[str, Any]:
     unresolved = [e for e in entries if e.get("outcome") == "needs_follow_up"]
     if unresolved:
         summary["coverage_warning"] = (
-            f"{len(unresolved)} surface(s) closed as 'needs_follow_up' and remain "
-            "unresolved. These should be represented in the report as areas requiring "
-            "further review rather than omitted."
+            f"{len(unresolved)} 个面（surface）以 'needs_follow_up' 状态关闭，仍未解决。"
+            "报告应把这些面列为需要进一步审查的区域，而不是直接略过。"
         )
         summary["unresolved_surfaces"] = [
             {"surface": e.get("surface", ""), "risk_area": e.get("risk_area", "")}
@@ -128,9 +126,8 @@ def _coverage_summary(agent_graph: dict[str, Any]) -> dict[str, Any]:
     if gaps:
         summary["coverage_gaps"] = [gap["detail"] for gap in gaps]
         summary["coverage_gap_warning"] = (
-            f"{len(gaps)} risk class(es) assigned to agents have no coverage entry and "
-            "will be published as unexamined. Record them (or a needs_follow_up row) "
-            "before the report goes out."
+            f"{len(gaps)} 个分配给智能体的风险类别没有任何覆盖记录，将按未检查状态发布。"
+            "请在报告发布前记录它们（或记一条 needs_follow_up）。"
         )
     return summary
 
@@ -258,9 +255,9 @@ async def finish_scan(
       any code/payload excerpts. Never emit one flat wall of prose or
       leave code unformatted.
     - **Each field is a section body, not a document.** The report adds
-      the section title ("Executive Summary", "Methodology", ...) itself,
-      so do NOT start a field with a heading such as ``# Executive
-      Summary`` — it would print twice. Sub-headings (``##``) inside a
+      the section title ("执行摘要", "方法论", ...) itself,
+      so do NOT start a field with a heading such as ``# 执行摘要``
+      — it would print twice. Sub-headings (``##``) inside a
       field are fine.
     - If **zero** vulnerabilities were found, say so plainly and
       characterize the posture positively; ``technical_analysis`` should
@@ -338,8 +335,8 @@ async def finish_scan(
                 "success": False,
                 "scan_completed": False,
                 "error": (
-                    "Cannot finish scan while child agents are still active. "
-                    "Wait for completion, send them finish instructions, or stop them first"
+                    "子智能体仍处于活动状态时不能结束扫描。"
+                    "请等待它们完成、向它们发送结束指令，或先停止它们"
                 ),
                 "active_agents": active_agents,
             },

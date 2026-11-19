@@ -468,11 +468,11 @@ func (m Model) updateModalMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	view := m.modalView()
 	switch m.modal {
 	case modalQuit, modalStop:
-		if m.centeredLabelHit(view, "Yes", msg.X, msg.Y) {
+		if m.centeredLabelHit(view, "是", msg.X, msg.Y) {
 			m.modalChoice = 0
 			return m.updateModal(tea.KeyMsg{Type: tea.KeyEnter})
 		}
-		if m.centeredLabelHit(view, "No", msg.X, msg.Y) {
+		if m.centeredLabelHit(view, "否", msg.X, msg.Y) {
 			m.modalChoice = 1
 			return m.updateModal(tea.KeyMsg{Type: tea.KeyEnter})
 		}
@@ -498,12 +498,12 @@ func (m Model) updateModalMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 				return m.pressReportButton(button)
 			}
 		}
-		if m.centeredLabelHit(view, "Copy", msg.X, msg.Y) {
+		if m.centeredLabelHit(view, "复制", msg.X, msg.Y) {
 			m.reportFocus = reportCopy
 			cmd := m.startVulnerabilityCopy()
 			return m, cmd
 		}
-		if m.centeredLabelHit(view, "Done", msg.X, msg.Y) {
+		if m.centeredLabelHit(view, "完成", msg.X, msg.Y) {
 			m.reportFocus = reportDone
 			m.closeModal()
 		}

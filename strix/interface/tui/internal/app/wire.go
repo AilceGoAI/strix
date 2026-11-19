@@ -94,7 +94,7 @@ func (m *Model) handleEnvelope(envelope protocol.Envelope) tea.Cmd {
 					}
 				}
 			}
-			message := "Command failed"
+			message := "命令失败"
 			if result.Error != nil && strings.TrimSpace(result.Error.Message) != "" {
 				message = result.Error.Message
 			}
@@ -201,7 +201,7 @@ func (m *Model) handleCollectionBootstrap(payload json.RawMessage) tea.Cmd {
 		return nil
 	}
 	if !validCollection(chunk.Collection) {
-		m.errorText = "Unknown collection: " + chunk.Collection
+		m.errorText = "未知集合：" + chunk.Collection
 		return nil
 	}
 	if chunk.Cursor == 0 {
@@ -282,7 +282,7 @@ func (m *Model) handleCollectionDelta(payload json.RawMessage) tea.Cmd {
 		return nil
 	}
 	if !validCollection(chunk.Collection) {
-		m.errorText = "Unknown collection: " + chunk.Collection
+		m.errorText = "未知集合：" + chunk.Collection
 		return nil
 	}
 	if chunk.Cursor == 0 {
@@ -488,8 +488,8 @@ func (m *Model) notifyBudgetPause() tea.Cmd {
 	if paused && !m.budgetPauseNotified {
 		m.budgetPauseNotified = true
 		return m.showToastFor(
-			"Budget limit reached — agents paused. Send a message to continue "+
-				"(this extends the budget), or ctrl-q to quit.",
+			"已达预算上限 — 智能体已暂停。发送消息可继续"+
+				"（会扩展预算），或按 ctrl-q 退出。",
 			15*time.Second,
 		)
 	}

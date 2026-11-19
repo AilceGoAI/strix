@@ -70,7 +70,7 @@ function parseJson(text: string, label: string): unknown {
     return JSON.parse(text);
   } catch {
     throw new RunParseError(
-      `${label} isn't valid JSON. Make sure you selected a Strix run directory.`
+      `${label} 不是合法的 JSON。请确认你选择的是 Strix 运行目录。`
     );
   }
 }
@@ -78,7 +78,7 @@ function parseJson(text: string, label: string): unknown {
 export function parseRunJson(text: string): ParsedRunSummary {
   const data = parseJson(text, "run.json");
   if (!data || typeof data !== "object" || Array.isArray(data)) {
-    throw new RunParseError("run.json is not an object.");
+    throw new RunParseError("run.json 不是一个对象。");
   }
   const record = data as Record<string, unknown>;
 
@@ -202,7 +202,7 @@ function parseOneVulnerability(
     ...emptyVulnerabilityDefaults(),
     id: asStringOrNull(raw.id) ?? `vuln-${index + 1}`,
     scan_id: runId,
-    title: asStringOrNull(raw.title) ?? "Untitled finding",
+    title: asStringOrNull(raw.title) ?? "未命名发现",
     description: asStringOrNull(raw.description) ?? "",
     severity: coerceSeverity(raw.severity),
     status,
@@ -235,11 +235,11 @@ export function parseVulnerabilitiesJson(
 ): Vulnerability[] {
   const data = parseJson(text, "vulnerabilities.json");
   if (!Array.isArray(data)) {
-    throw new RunParseError("vulnerabilities.json is not a JSON array.");
+    throw new RunParseError("vulnerabilities.json 不是 JSON 数组。");
   }
   return data.map((item, i) => {
     if (!item || typeof item !== "object") {
-      throw new RunParseError(`vulnerabilities.json entry #${i + 1} is not an object.`);
+      throw new RunParseError(`vulnerabilities.json 第 ${i + 1} 项不是一个对象。`);
     }
     return parseOneVulnerability(item as Record<string, unknown>, i, runId);
   });

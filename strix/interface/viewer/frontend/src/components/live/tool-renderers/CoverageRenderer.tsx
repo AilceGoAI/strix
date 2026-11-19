@@ -20,11 +20,11 @@ interface CoverageEntry {
  * its own icon and color rather than a shared neutral row.
  */
 const OUTCOMES: Record<string, { label: string; color: string; Icon: typeof Circle }> = {
-  reported: { label: "reported", color: "text-orange-400", Icon: AlertTriangle },
-  no_issue_found: { label: "no issue found", color: "text-emerald-400", Icon: CheckCircle2 },
-  ruled_out: { label: "ruled out", color: "text-emerald-400/70", Icon: CheckCircle2 },
-  not_applicable: { label: "not applicable", color: "text-[#777]", Icon: CircleSlash },
-  needs_follow_up: { label: "needs follow-up", color: "text-yellow-400", Icon: HelpCircle },
+  reported: { label: "已上报", color: "text-orange-400", Icon: AlertTriangle },
+  no_issue_found: { label: "未发现问题", color: "text-emerald-400", Icon: CheckCircle2 },
+  ruled_out: { label: "已排除", color: "text-emerald-400/70", Icon: CheckCircle2 },
+  not_applicable: { label: "不适用", color: "text-[#777]", Icon: CircleSlash },
+  needs_follow_up: { label: "需要跟进", color: "text-yellow-400", Icon: HelpCircle },
 };
 
 const OUTCOME_ORDER = [
@@ -34,16 +34,16 @@ const OUTCOME_ORDER = [
 function outcomeMeta(outcome: string | undefined) {
   const key = (outcome ?? "").trim().toLowerCase();
   return OUTCOMES[key] ?? {
-    label: key ? key.replace(/_/g, " ") : "unrecorded",
+    label: key ? key.replace(/_/g, " ") : "未记录",
     color: "text-[#777]",
     Icon: Circle,
   };
 }
 
 const ACTION_LABELS: Record<string, string> = {
-  record_coverage: "Coverage recorded",
-  update_coverage: "Coverage updated",
-  list_coverage: "Coverage",
+  record_coverage: "覆盖已记录",
+  update_coverage: "覆盖已更新",
+  list_coverage: "覆盖",
 };
 
 function Header({ toolName }: { toolName: string }) {
@@ -67,16 +67,16 @@ function Row({ entry }: { entry: CoverageEntry }) {
       <Icon className={`w-3.5 h-3.5 shrink-0 mt-[2px] ${color}`} />
       <div className="min-w-0">
         <div className="text-[13px] leading-snug">
-          <span className="text-[#bbb]">{entry.surface ?? "(unnamed surface)"}</span>
+          <span className="text-[#bbb]">{entry.surface ?? "（未命名攻击面）"}</span>
           {entry.risk_area && <span className="text-[#666]"> · {entry.risk_area}</span>}
         </div>
         <div className="text-xs mt-0.5">
           <span className={color}>{label}</span>
           {previous.length > 0 && (
-            <span className="text-[#555]"> (was {previous.join(" → ")})</span>
+            <span className="text-[#555]">（原为 {previous.join(" → ")}）</span>
           )}
           {(entry.by_you || entry.agent_name) && (
-            <span className="text-[#555]"> · {entry.by_you ? "you" : entry.agent_name}</span>
+            <span className="text-[#555]"> · {entry.by_you ? "你" : entry.agent_name}</span>
           )}
         </div>
         {entry.evidence && (
@@ -115,7 +115,7 @@ export default function CoverageRenderer({ toolName, args, result }: ToolRendere
           </div>
         )}
         <div className="mt-1 text-red-400/70 text-[13px]">
-          {(structured.error as string) ?? "Coverage call failed"}
+          {(structured.error as string) ?? "覆盖记录调用失败"}
         </div>
       </div>
     );
@@ -135,7 +135,7 @@ export default function CoverageRenderer({ toolName, args, result }: ToolRendere
               const { label, color } = outcomeMeta(o);
               return (
                 <span key={o} className={`text-xs ${color}`}>
-                  {label}: {counts[o]}
+                  {label}：{counts[o]}
                 </span>
               );
             })}
@@ -147,7 +147,7 @@ export default function CoverageRenderer({ toolName, args, result }: ToolRendere
           </div>
         ) : (
           <div className="mt-1.5 text-[#555] text-xs">
-            {total === 0 ? "No surfaces recorded yet" : "No surfaces match this filter"}
+            {total === 0 ? "尚未记录任何攻击面" : "没有攻击面匹配此筛选条件"}
           </div>
         )}
       </div>
@@ -165,7 +165,7 @@ export default function CoverageRenderer({ toolName, args, result }: ToolRendere
         <Icon className={`w-3.5 h-3.5 shrink-0 mt-[2px] ${color}`} />
         <div className="min-w-0">
           <div className="text-[13px] leading-snug text-[#bbb]">
-            {surface || (structured?.entry_id ? `entry ${structured.entry_id as string}` : "(unnamed surface)")}
+            {surface || (structured?.entry_id ? `条目 ${structured.entry_id as string}` : "（未命名攻击面）")}
             {riskArea && <span className="text-[#666]"> · {riskArea}</span>}
           </div>
           <div className="text-xs mt-0.5">

@@ -112,7 +112,7 @@ func formatShellOutput(output string) string {
 	for _, line := range display {
 		b.WriteString("  " + Dim().Render(truncateShellLine(line)) + "\n")
 	}
-	b.WriteString(Dim().Italic(true).Render(fmt.Sprintf("  ... %d lines truncated ...", hidden)) + "\n")
+	b.WriteString(Dim().Italic(true).Render(fmt.Sprintf("  … 已截断 %d 行 …", hidden)) + "\n")
 	tailLines := lines[total-tail:]
 	for i, line := range tailLines {
 		b.WriteString("  " + Dim().Render(truncateShellLine(line)))
@@ -133,13 +133,13 @@ func appendShellOutput(b *strings.Builder, p shellParsed, status string) {
 	}
 	if output == "" {
 		if p.hasExitCode && p.exitCode != 0 {
-			b.WriteString("\n" + Col(Red).Faint(true).Render(fmt.Sprintf("  exit %d", p.exitCode)))
+			b.WriteString("\n" + Col(Red).Faint(true).Render(fmt.Sprintf("  退出码 %d", p.exitCode)))
 		}
 		return
 	}
 	b.WriteString("\n" + formatShellOutput(output))
 	if p.hasExitCode && p.exitCode != 0 {
-		b.WriteString("\n" + Col(Red).Faint(true).Render(fmt.Sprintf("  exit %d", p.exitCode)))
+		b.WriteString("\n" + Col(Red).Faint(true).Render(fmt.Sprintf("  退出码 %d", p.exitCode)))
 	}
 }
 
@@ -147,7 +147,7 @@ func renderTerminal(prompt string, promptColor lipgloss.Color, command string, r
 	var b strings.Builder
 	b.WriteString(Dim().Render(">_") + " ")
 	if strings.TrimSpace(command) == "" {
-		b.WriteString(Dim().Render("getting logs..."))
+		b.WriteString(Dim().Render("正在获取日志…"))
 	} else {
 		b.WriteString(Col(promptColor).Render(prompt) + " " + command)
 	}
@@ -177,7 +177,7 @@ func renderWriteStdin(args map[string]any, result any, status string) string {
 	chars := StringValue(args["chars"])
 	meta := ""
 	if sid, ok := args["session_id"]; ok && sid != nil {
-		meta = "session #" + StringValue(sid)
+		meta = "会话 #" + StringValue(sid)
 	}
 	return renderTerminal(">>>", Blue, chars, result, status, meta)
 }

@@ -22,7 +22,7 @@ const (
 	maxCollectionBytes = 4 << 20
 )
 
-var ErrCommandPending = errors.New("command is already pending")
+var ErrCommandPending = errors.New("命令已在等待中")
 
 type Client struct {
 	conn           io.ReadWriteCloser
@@ -38,16 +38,16 @@ type Client struct {
 func ConnectInherited(fdValue string) (*Client, error) {
 	fd, err := strconv.ParseUint(fdValue, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid STRIX_TUI_FD: %w", err)
+		return nil, fmt.Errorf("无效的 STRIX_TUI_FD：%w", err)
 	}
 	file := os.NewFile(uintptr(fd), "strix-tui-ipc")
 	if file == nil {
-		return nil, fmt.Errorf("invalid STRIX_TUI_FD %d", fd)
+		return nil, fmt.Errorf("无效的 STRIX_TUI_FD %d", fd)
 	}
 	connection, err := net.FileConn(file)
 	_ = file.Close()
 	if err != nil {
-		return nil, fmt.Errorf("open inherited TUI connection: %w", err)
+		return nil, fmt.Errorf("打开继承的 TUI 连接：%w", err)
 	}
 	return newClient(connection), nil
 }
@@ -75,16 +75,16 @@ func ConnectFromEnvironment() (*Client, error) {
 	_ = os.Unsetenv("STRIX_TUI_ADDR")
 	_ = os.Unsetenv("STRIX_TUI_TOKEN")
 	if address == "" || token == "" {
-		return nil, fmt.Errorf("STRIX_TUI_FD or STRIX_TUI_ADDR and STRIX_TUI_TOKEN are required")
+		return nil, fmt.Errorf("需要设置 STRIX_TUI_FD，或 STRIX_TUI_ADDR 与 STRIX_TUI_TOKEN")
 	}
 
 	connection, err := net.DialTimeout("tcp", address, 10*time.Second)
 	if err != nil {
-		return nil, fmt.Errorf("connect to TUI backend: %w", err)
+		return nil, fmt.Errorf("连接 TUI 后端：%w", err)
 	}
 	if err := writeAll(connection, []byte(token)); err != nil {
 		connection.Close()
-		return nil, fmt.Errorf("authenticate to TUI backend: %w", err)
+		return nil, fmt.Errorf("向 TUI 后端认证：%w", err)
 	}
 	return newClient(connection), nil
 }
@@ -110,7 +110,7 @@ func (c *Client) readEnvelope(maximum uint32) (protocol.Envelope, int, error) {
 	}
 	size := binary.BigEndian.Uint32(header[:])
 	if size == 0 || size > maximum {
-		return protocol.Envelope{}, 0, fmt.Errorf("invalid TUI IPC message size: %d", size)
+		return protocol.Envelope{}, 0, fmt.Errorf("无效的 TUI IPC 消息大小：%d", size)
 	}
 	raw := make([]byte, size)
 	if _, err := io.ReadFull(c.conn, raw); err != nil {
@@ -129,7 +129,7 @@ func (c *Client) Read() (protocol.Envelope, error) {
 		return protocol.Envelope{}, err
 	}
 	if envelope.Type != "collection_bootstrap" && envelope.Type != "collection_delta" && size > maxCommandBytes {
-		return protocol.Envelope{}, fmt.Errorf("TUI control message exceeds %d bytes", maxCommandBytes)
+		return protocol.Envelope{}, fmt.Errorf("TUI 控制消息超过 %d 字节", maxCommandBytes)
 	}
 	return envelope, nil
 }
@@ -145,20 +145,20 @@ func (c *Client) Handshake() error {
 	}
 	envelope, _, err := c.readEnvelope(maxCommandBytes)
 	if err != nil {
-		return fmt.Errorf("read protocol hello: %w", err)
+		return fmt.Errorf("读取协议 hello：%w", err)
 	}
 	if envelope.Version != protocol.Version {
-		return fmt.Errorf("protocol mismatch: backend=%d client=%d", envelope.Version, protocol.Version)
+		return fmt.Errorf("协议不匹配：后端=%d 客户端=%d", envelope.Version, protocol.Version)
 	}
 	if envelope.Type != "hello" {
-		return fmt.Errorf("protocol handshake expected hello, received %q", envelope.Type)
+		return fmt.Errorf("协议握手期望 hello，收到 %q", envelope.Type)
 	}
 	var hello protocol.Hello
 	if err := json.Unmarshal(envelope.Payload, &hello); err != nil {
-		return fmt.Errorf("decode protocol hello: %w", err)
+		return fmt.Errorf("解码协议 hello：%w", err)
 	}
 	if !reflect.DeepEqual(hello.Capabilities, protocol.Capabilities) {
-		return fmt.Errorf("protocol capability mismatch")
+		return fmt.Errorf("协议能力不匹配")
 	}
 	payload, err := json.Marshal(protocol.Hello{Capabilities: protocol.Capabilities})
 	if err != nil {
@@ -177,7 +177,7 @@ func (c *Client) sendEnvelope(envelope protocol.Envelope, maximum int) error {
 		return err
 	}
 	if len(raw) > maximum {
-		return fmt.Errorf("TUI IPC message exceeds %d bytes", maximum)
+		return fmt.Errorf("TUI IPC 消息超过 %d 字节", maximum)
 	}
 	framed := make([]byte, 4+len(raw))
 	binary.BigEndian.PutUint32(framed[:4], uint32(len(raw)))

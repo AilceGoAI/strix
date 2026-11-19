@@ -260,7 +260,7 @@ class TuiController:
                     projected["id"] = f"vulnerability-{index}"
                 result.append(projected)
             return result
-        raise ValueError(f"Unknown collection: {name}")
+        raise ValueError(f"未知的集合：{name}")
 
     def collection_snapshot(self, name: str) -> tuple[int | None, list[dict[str, Any]]]:
         """Return a collection cursor and complete bounded projection."""
@@ -276,7 +276,7 @@ class TuiController:
     ) -> tuple[int, list[dict[str, Any]]]:
         """Return event upserts since a monotonic source cursor."""
         if name != "events":
-            raise ValueError(f"Collection {name!r} does not expose incremental changes")
+            raise ValueError(f"集合 {name!r} 不提供增量变更")
         next_cursor, events = self.live_view.event_changes_since(cursor)
         return next_cursor, [
             collection_item_projection(event) for event in events[-MAX_TERMINAL_EVENTS:]
@@ -311,7 +311,7 @@ class TuiController:
         self._require_setup_mutable()
         instruction = payload.get("instruction", "")
         if not isinstance(instruction, str):
-            raise TypeError("instruction must be a string")
+            raise TypeError("instruction 必须是字符串")
         self.instruction = instruction.strip()
         return {"instruction": self.instruction}
 
@@ -322,12 +322,12 @@ class TuiController:
         # the user's explicit confirmation rather than happening silently.
         mount_working_dir = payload.get("mount_working_dir", False)
         if not isinstance(mount_working_dir, bool):
-            raise TypeError("mount_working_dir must be a boolean")
+            raise TypeError("mount_working_dir 必须是布尔值")
         model = (load_settings().llm.model or "").strip()
         if not model:
             raise ValueError("No model configured. Set STRIX_LLM first.")
         if self._on_start is None:
-            raise RuntimeError("Scan start is unavailable")
+            raise RuntimeError("扫描启动不可用")
         if not self.targets and not mount_working_dir:
             raise ValueError("No target set. Add a target first.")
         # The model check runs while still on the start screen, for a bare
@@ -357,7 +357,7 @@ class TuiController:
 
     async def _begin_scan(self) -> None:
         if self._on_start is None:
-            raise RuntimeError("Scan start is unavailable")
+            raise RuntimeError("扫描启动不可用")
         self._start_in_progress = True
         try:
             await self._on_start()
@@ -379,7 +379,7 @@ class TuiController:
             raise RuntimeError("No mount confirmation is pending")
         approved = payload.get("approved")
         if not isinstance(approved, bool):
-            raise TypeError("approved must be a boolean")
+            raise TypeError("approved 必须是布尔值")
         self.pending_workspace_mount = None
         # Declining skips the mount, it does not abandon the scan. The prompt is
         # the whole of the input either way; the working directory is only an
@@ -392,9 +392,9 @@ class TuiController:
         agent_id = self._required_string(payload, "agent_id")
         message = self._required_string(payload, "message")
         if self.coordinator is None:
-            raise RuntimeError("Agent coordinator is unavailable")
+            raise RuntimeError("智能体协调器不可用")
         if self.scan_loop is None or self.scan_loop.is_closed():
-            raise RuntimeError("Scan loop is not ready")
+            raise RuntimeError("扫描事件循环尚未就绪")
         self.live_view.record_user_message(agent_id, message)
         if self.scan_loop is asyncio.get_running_loop():
             delivered = await self.coordinator.send(
@@ -411,7 +411,7 @@ class TuiController:
             )
             delivered = await asyncio.wrap_future(future)
         if not delivered:
-            raise RuntimeError("Message could not be delivered")
+            raise RuntimeError("消息无法送达")
         self.live_view.upsert_agent(agent_id, status="waiting", error_message=None)
         return {"sent": True}
 
@@ -419,12 +419,12 @@ class TuiController:
         agent_id = self._required_string(payload, "agent_id")
         agent = self.live_view.agents.get(agent_id)
         if agent is None:
-            raise ValueError(f"Unknown agent: {agent_id}")
+            raise ValueError(f"未知的智能体：{agent_id}")
         status = str(agent.get("status", ""))
         if status not in _STOPPABLE_AGENT_STATUSES:
             raise RuntimeError(f"Agent '{agent_id}' cannot be stopped while {status or 'unknown'}")
         if self.coordinator is None or self.scan_loop is None or self.scan_loop.is_closed():
-            raise RuntimeError("Scan loop is not ready")
+            raise RuntimeError("扫描事件循环尚未就绪")
         if self.scan_loop is asyncio.get_running_loop():
             accepted = await self.coordinator.cancel_descendants_graceful(agent_id)
         else:
@@ -443,7 +443,7 @@ class TuiController:
             return {"status": "running", "url": self.viewer_url}
         if self.report_state is None:
             self.viewer_status = "failed"
-            return {"status": self.viewer_status, "error": "Scan output is not ready"}
+            return {"status": self.viewer_status, "error": "扫描输出尚未就绪"}
         try:
             from strix.interface.tui.backend.messages import (
                 send_user_message_to_agent,
@@ -456,7 +456,7 @@ class TuiController:
 
             if not bundle_is_built():
                 self.viewer_status = "unavailable"
-                return {"status": self.viewer_status, "error": "Viewer UI not built"}
+                return {"status": self.viewer_status, "error": "查看器界面尚未构建"}
 
             def steer(agent_id: str, message: str) -> bool:
                 return send_user_message_to_agent(
@@ -489,7 +489,7 @@ class TuiController:
                 posthog.viewer_opened(source="tui", live=live)
         except Exception:  # noqa: BLE001 - viewer startup failures must not crash the TUI
             self.viewer_status = "failed"
-            return {"status": self.viewer_status, "error": "Viewer failed to start"}
+            return {"status": self.viewer_status, "error": "查看器启动失败"}
         else:
             return {"status": self.viewer_status, "url": self.viewer_url}
 
@@ -513,7 +513,7 @@ class TuiController:
     def _required_string(payload: dict[str, Any], name: str) -> str:
         value = payload.get(name)
         if not isinstance(value, str) or not value.strip():
-            raise ValueError(f"{name} must be a non-empty string")
+            raise ValueError(f"{name} 必须是非空字符串")
         return value.strip()
 
     def _require_setup_mutable(self) -> None:

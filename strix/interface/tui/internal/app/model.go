@@ -180,9 +180,9 @@ const (
 // Composer placeholders. The launch screen falls back to the short prompt when
 // the column is too narrow to show the full one without clipping it.
 const (
-	setupPlaceholder      = "Describe what to test, or name a target"
-	setupPlaceholderShort = "What should Strix test?"
-	chatPlaceholder       = "Send a message"
+	setupPlaceholder      = "描述要测试的内容，或指定一个目标"
+	setupPlaceholderShort = "Strix 要测试什么？"
+	chatPlaceholder       = "发送消息"
 )
 
 // The composer opens at minInputLines rows for breathing room and grows with
@@ -203,7 +203,7 @@ func newChatInput() textarea.Model {
 	input.SetHeight(1)
 	input.KeyMap.InsertNewline = key.NewBinding(
 		key.WithKeys("shift+enter", "alt+enter", "ctrl+j"),
-		key.WithHelp("shift+enter", "insert newline"),
+		key.WithHelp("shift+enter", "插入换行"),
 	)
 	plain := lipgloss.NewStyle()
 	text := lipgloss.NewStyle().Foreground(textColor)
@@ -341,15 +341,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ensureVulnerabilityVisible()
 	case wireErrMsg:
 		if !m.quitting {
-			m.errorText = "Backend disconnected: " + msg.err.Error()
-			m.fatalError = fmt.Errorf("backend disconnected: %w", msg.err)
+			m.errorText = "后端已断开：" + msg.err.Error()
+			m.fatalError = fmt.Errorf("后端已断开：%w", msg.err)
 		}
 		return m, tea.Quit
 	case wireMsg:
 		envelope := protocol.Envelope(msg)
 		if envelope.Version != protocol.Version {
-			m.errorText = fmt.Sprintf("Protocol mismatch: backend=%d client=%d", envelope.Version, protocol.Version)
-			m.fatalError = fmt.Errorf("protocol mismatch: backend=%d client=%d", envelope.Version, protocol.Version)
+			m.errorText = fmt.Sprintf("协议不匹配：后端=%d 客户端=%d", envelope.Version, protocol.Version)
+			m.fatalError = fmt.Errorf("协议不匹配：后端=%d 客户端=%d", envelope.Version, protocol.Version)
 			return m, tea.Quit
 		}
 		if cmd := m.handleEnvelope(envelope); cmd != nil {
@@ -368,9 +368,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case selectionCopiedMsg:
-		text := "Copied to clipboard"
+		text := "已复制到剪贴板"
 		if msg.err != nil {
-			text = "Copy failed: " + msg.err.Error()
+			text = "复制失败：" + msg.err.Error()
 		}
 		return m, m.showToast(text)
 	case toastExpiredMsg:

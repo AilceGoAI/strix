@@ -106,7 +106,7 @@ def _login(console: Console, argv: list[str]) -> int:
     parser.add_argument(
         "--no-browser",
         action="store_true",
-        help="Do not open the browser. Print the verification URL instead.",
+        help="不打开浏览器，改为打印验证 URL。",
     )
     scope_mode = parser.add_mutually_exclusive_group()
     scope_mode.add_argument(
@@ -115,31 +115,30 @@ def _login(console: Console, argv: list[str]) -> int:
         metavar="SCOPE",
         default=None,
         help=(
-            "API scopes for the token, for example scans:read billing:write. "
-            "The server always includes a minimum scope set. "
-            "Without this option, an interactive picker opens after the browser step."
+            "令牌的 API 权限范围，例如 scans:read billing:write。"
+            "服务器始终包含一组最小范围。"
+            "不使用该选项时，浏览器步骤之后会打开交互式选择。"
         ),
     )
     scope_mode.add_argument(
         "--scope-profile",
         choices=("minimal", "recommended", "full"),
         default=None,
-        help="Scope profile to approve. Defaults to an interactive choice in a TTY.",
+        help="要批准的权限范围配置。在 TTY 中默认为交互式选择。",
     )
     parser.add_argument(
         "--device-name",
         default=None,
         metavar="NAME",
-        help="Privacy-safe label shown for this CLI session in the dashboard.",
+        help="在仪表盘中显示给本次 CLI 会话的隐私安全标签。",
     )
     parser.add_argument(
         "--workspace",
         metavar="WORKSPACE",
         default=None,
         help=(
-            "Workspace that receives the token, by ID or by exact name. "
-            "Without this option, an interactive picker opens when you have "
-            "more than one workspace."
+            "接收该令牌的工作区，可用 ID 或精确名称指定。"
+            "不使用该选项时，如果你有多个工作区，会打开交互式选择。"
         ),
     )
     previous_record = read_record()
@@ -150,9 +149,9 @@ def _login(console: Console, argv: list[str]) -> int:
 
     console.print()
     host = urlparse(_app_url()).netloc or _app_url()
-    console.print(f"[bold]Signing in to the Strix platform[/] [dim]({_terminal_markup(host)})[/]")
+    console.print(f"[bold]正在登录 Strix 平台[/] [dim]({_terminal_markup(host)})[/]")
     console.print(
-        "[dim]This creates your account and workspace when needed, and stores an API token.[/]"
+        "[dim]需要时会创建你的账号与工作区，并保存一个 API token。[/]"
     )
     console.print()
 
@@ -166,21 +165,21 @@ def _login(console: Console, argv: list[str]) -> int:
             device_name=args.device_name,
         )
     except PlatformAuthError as exc:
-        console.print(f"[red]Sign-in failed:[/] {_terminal_markup(exc)}")
+        console.print(f"[red]登录失败：[/] {_terminal_markup(exc)}")
         return 1
     except KeyboardInterrupt:
-        console.print("\n[yellow]Sign-in cancelled.[/]")
+        console.print("\n[yellow]已取消登录。[/]")
         return 130
 
     try:
         save_record(record)
     except OSError as exc:
         console.print(
-            f"[red]Sign-in succeeded, but the token could not be stored:[/] {_terminal_markup(exc)}"
+            f"[red]登录成功，但无法保存令牌：[/] {_terminal_markup(exc)}"
         )
         console.print(
-            f"[dim]Check that {_terminal_markup(AUTH_PATH.parent)} is writable, "
-            "then run `strix cloud login` again.[/]"
+            f"[dim]请确认 {_terminal_markup(AUTH_PATH.parent)} 可写，"
+            "然后再次运行 `strix cloud login`。[/]"
         )
         return 1
     _revoke_replaced_legacy_session(previous_record, record)
@@ -204,7 +203,7 @@ def _run_device_flow(  # noqa: PLR0912, PLR0915
     try:
         identity = read_or_create_identity(device_name=device_name)
     except (OSError, ValueError) as exc:
-        raise PlatformAuthError(f"could not prepare the CLI device identity: {exc}") from exc
+        raise PlatformAuthError(f"无法准备 CLI 设备标识：{exc}") from exc
 
     try:
         response = requests.post(
@@ -213,7 +212,7 @@ def _run_device_flow(  # noqa: PLR0912, PLR0915
             allow_redirects=False,
         )
     except requests.RequestException as exc:
-        raise PlatformAuthError(f"could not reach {app_url}: {exc}") from exc
+        raise PlatformAuthError(f"无法连接 {app_url}：{exc}") from exc
     if not 200 <= response.status_code < 300:
         raise PlatformAuthError(_error_detail(response))
     authorization = _json_object(response)
@@ -234,27 +233,27 @@ def _run_device_flow(  # noqa: PLR0912, PLR0915
         maximum=_MAX_POLL_INTERVAL_S,
     )
     if not device_code or not verification_uri:
-        raise PlatformAuthError("the server returned an incomplete device authorization")
+        raise PlatformAuthError("服务器返回的设备授权不完整")
     if not is_safe_web_url(verification_uri, trusted_origin=app_url):
         raise PlatformAuthError("the server returned an invalid verification URL")
 
     console.print(
         Panel.fit(
             Text.assemble(
-                ("Confirmation code: ", "dim"),
+                ("确认码：", "dim"),
                 (sanitize_terminal_text(user_code), "bold cyan"),
             ),
-            title="Verify this device",
+            title="验证此设备",
         )
     )
-    console.print("Open this URL in your browser and confirm the code:")
+    console.print("在浏览器中打开以下 URL 并确认该确认码：")
     console.print(sanitize_terminal_text(verification_uri), markup=False, soft_wrap=True)
 
     if open_browser:
         with contextlib.suppress(Exception):
             webbrowser.open(verification_uri)
 
-    console.print("[dim]Waiting for browser confirmation…[/]")
+    console.print("[dim]等待浏览器确认……[/]")
 
     poll_body: dict[str, Any] = {"device_code": device_code, **identity}
     if interactive:
@@ -306,7 +305,7 @@ def _handle_poll_error(poll: requests.Response) -> int | None:
     if error == "slow_down":
         return 5
     if error == "access_denied":
-        raise PlatformAuthError("the sign-in request was denied in the browser")
+        raise PlatformAuthError("浏览器中拒绝了本次登录请求")
     if error == "expired_token":
         return None
     raise PlatformAuthError(_error_detail(poll))
@@ -348,7 +347,7 @@ def _signed_in_record(
 def _require_api_token(record: dict[str, Any]) -> dict[str, Any]:
     api_token = record.get("api_token")
     if not isinstance(api_token, str) or not api_token.strip():
-        raise PlatformAuthError("the server returned a sign-in response without an API token")
+        raise PlatformAuthError("服务器返回的登录响应中没有 API token")
     return record
 
 
@@ -366,7 +365,7 @@ def _bind_login_record(record: dict[str, Any], app_url: str) -> dict[str, Any]:
         or any(character.isspace() for character in app_url)
         or "%" in parsed.netloc
     ):
-        raise PlatformAuthError("the configured platform URL is invalid")
+        raise PlatformAuthError("配置的平台 URL 无效")
     bound = dict(record)
     bound["app_url"] = urlunsplit(
         (parsed.scheme.lower(), parsed.netloc.lower(), parsed.path.rstrip("/"), "", "")
@@ -391,7 +390,7 @@ def _complete_selection(
     catalog = _dict_items(selection.get("scopes"))
     selection_token = str(selection.get("selection_token") or "")
     if not selection_token or not organizations:
-        raise PlatformAuthError("the server returned an incomplete selection response")
+        raise PlatformAuthError("服务器返回的选择响应不完整")
 
     chosen_org = _choose_workspace(console, organizations, workspace)
     role = str(chosen_org.get("role") or "admin")
@@ -417,7 +416,7 @@ def _complete_selection(
             allow_redirects=False,
         )
     except requests.RequestException as exc:
-        raise PlatformAuthError(f"could not reach {app_url}: {exc}") from exc
+        raise PlatformAuthError(f"无法连接 {app_url}：{exc}") from exc
     if not 200 <= response.status_code < 300:
         raise PlatformAuthError(_error_detail(response))
     return _signed_in_record(
@@ -449,31 +448,31 @@ def _choose_workspace(
         if len(by_name) > 1:
             matching_ids = ", ".join(str(org.get("id", "")) for org in by_name)
             raise PlatformAuthError(
-                f"multiple workspaces are named {workspace!r}; use an exact workspace ID: "
+                f"有多个工作区名为 {workspace!r}；请使用精确的工作区 ID："
                 f"{matching_ids}"
             )
         names = ", ".join(str(org.get("name", "")) for org in organizations)
-        raise PlatformAuthError(f"no workspace matches {workspace!r}. Your workspaces: {names}")
+        raise PlatformAuthError(f"没有匹配 {workspace!r} 的工作区。你的工作区：{names}")
     if len(organizations) == 1:
         return organizations[0]
     if not sys.stdin.isatty():
         choices = ", ".join(f"{org.get('name', '')} ({org.get('id', '')})" for org in organizations)
         raise PlatformAuthError(
-            "more than one workspace is available; rerun with --workspace NAME_OR_ID. "
-            f"Available workspaces: {choices}"
+            "存在多个可用工作区；请用 --workspace NAME_OR_ID 重新运行。"
+            f"可用工作区：{choices}"
         )
 
     console.print()
-    console.print("[bold]Select a workspace for the API token:[/]")
+    console.print("[bold]为 API token 选择工作区：[/]")
     for index, org in enumerate(organizations, start=1):
         name = _terminal_markup(org.get("name", ""))
         org_role = _terminal_markup(org.get("role", ""))
         console.print(f"  [cyan]{index}[/]. {name} [dim]({org_role})[/]")
     while True:
-        answer = console.input(f"Workspace [1-{len(organizations)}] (1): ").strip() or "1"
+        answer = console.input(f"工作区 [1-{len(organizations)}] (1)：").strip() or "1"
         if answer.isdigit() and 1 <= int(answer) <= len(organizations):
             return organizations[int(answer) - 1]
-        console.print("[yellow]Enter a number from the list.[/]")
+        console.print("[yellow]请输入列表中的编号。[/]")
 
 
 def _choose_scopes(
@@ -488,16 +487,16 @@ def _choose_scopes(
         return "recommended", None
 
     console.print()
-    console.print("[bold]Select token scopes:[/]")
+    console.print("[bold]选择 token 权限范围：[/]")
     console.print(
-        "  [cyan]1[/]. Recommended [dim](scans, findings, schedules, assets, uploads, "
+        "  [cyan]1[/]. 推荐 [dim](scans, findings, schedules, assets, uploads, "
         "workspace switching, billing/top-ups; no token creation)[/]"
     )
-    console.print("  [cyan]2[/]. Full access [dim](every scope your role allows)[/]")
-    console.print("  [cyan]3[/]. Minimal [dim](scan read/write and billing read)[/]")
-    console.print("  [cyan]4[/]. Custom [dim](pick individual scopes)[/]")
+    console.print("  [cyan]2[/]. 完全访问 [dim](every scope your role allows)[/]")
+    console.print("  [cyan]3[/]. 最小 [dim](scan read/write and billing read)[/]")
+    console.print("  [cyan]4[/]. 自定义 [dim](pick individual scopes)[/]")
     while True:
-        answer = console.input("Scopes [1-4] (1): ").strip() or "1"
+        answer = console.input("范围 [1-4] (1)：").strip() or "1"
         if answer == "1":
             return "recommended", None
         if answer == "2":
@@ -506,7 +505,7 @@ def _choose_scopes(
             return "minimal", None
         if answer == "4":
             return "custom", _choose_custom_scopes(console, allowed)
-        console.print("[yellow]Enter a number from 1 to 4.[/]")
+        console.print("[yellow]请输入 1 到 4 之间的编号。[/]")
 
 
 def _choose_custom_scopes(console: Console, allowed: list[dict[str, Any]]) -> list[str]:
@@ -520,7 +519,7 @@ def _choose_custom_scopes(console: Console, allowed: list[dict[str, Any]]) -> li
         for index, item in enumerate(allowed, start=1):
             scope = str(item.get("scope", ""))
             mark = "[green]x[/]" if scope in selected else " "
-            required = " [dim](always included)[/]" if item.get("minimum") else ""
+            required = " [dim](始终包含)[/]" if item.get("minimum") else ""
             rendered_scope = _terminal_markup(scope)
             description = _terminal_markup(item.get("description", ""))
             console.print(
@@ -528,20 +527,20 @@ def _choose_custom_scopes(console: Console, allowed: list[dict[str, Any]]) -> li
                 f"\n         [dim]{description}[/]"
             )
         answer = console.input(
-            "Toggle scopes by number (comma separated), or press Enter to confirm: "
+            "按编号切换范围（逗号分隔），或按回车确认："
         ).strip()
         if not answer:
             return sorted(selected)
         for part in answer.replace(",", " ").split():
             if not part.isdigit() or not 1 <= int(part) <= len(allowed):
                 console.print(
-                    f"[yellow]Ignored {_terminal_markup(part)!r}: not a number from the list.[/]"
+                    f"[yellow]已忽略 {_terminal_markup(part)!r}：不是列表中的编号。[/]"
                 )
                 continue
             item = allowed[int(part) - 1]
             scope = str(item.get("scope", ""))
             if item.get("minimum"):
-                console.print(f"[yellow]{_terminal_markup(scope)} is always included.[/]")
+                console.print(f"[yellow]{_terminal_markup(scope)} 始终包含。[/]")
                 continue
             if scope in selected:
                 selected.discard(scope)
@@ -553,9 +552,9 @@ def _json_object(response: requests.Response) -> dict[str, Any]:
     try:
         data = response.json()
     except ValueError as exc:
-        raise PlatformAuthError("the server returned a response that is not JSON") from exc
+        raise PlatformAuthError("服务器返回的响应不是 JSON") from exc
     if not isinstance(data, dict):
-        raise PlatformAuthError("the server returned an unexpected response shape")
+        raise PlatformAuthError("服务器返回了意外的响应结构")
     return cast("dict[str, Any]", data)
 
 
@@ -610,8 +609,8 @@ def _print_logout_failure(console: Console, message: str, *, as_json: bool) -> i
     if as_json:
         sys.stdout.write(json.dumps({"error": message, "removed": False}) + "\n")
     else:
-        console.print(f"[red]Sign-out failed:[/] {_terminal_markup(message)}")
-        console.print("[dim]The local token was kept so you can safely retry.[/]")
+        console.print(f"[red]登出失败：[/] {_terminal_markup(message)}")
+        console.print("[dim]本地 token 已保留，你可以安全地重试。[/]")
     return 1
 
 
@@ -636,29 +635,29 @@ def _print_success(console: Console, record: dict[str, Any]) -> None:
     email = record.get("email", "")
     organization = record.get("organization_name") or record.get("organization_id", "")
     console.print()
-    console.print("[green]✓ Signed in to the Strix platform.[/]")
+    console.print("[green]✓ 已登录 Strix 平台。[/]")
     if email:
-        console.print(f"  Account:   [bold]{_terminal_markup(email)}[/]")
+        console.print(f"  账号：    [bold]{_terminal_markup(email)}[/]")
     if organization:
-        console.print(f"  Workspace: [bold]{_terminal_markup(organization)}[/]")
+        console.print(f"  工作区：  [bold]{_terminal_markup(organization)}[/]")
     scopes = record.get("scopes")
     if isinstance(scopes, list) and scopes:
-        console.print(f"  Access:    [dim]{_terminal_markup(_scope_summary(record))}[/]")
-    console.print(f"  Token:     stored in [dim]{_terminal_markup(AUTH_PATH)}[/]")
+        console.print(f"  权限：    [dim]{_terminal_markup(_scope_summary(record))}[/]")
+    console.print(f"  Token：   保存在 [dim]{_terminal_markup(AUTH_PATH)}[/]")
     console.print()
     console.print(
-        "[dim]The managed platform is ready. Run `strix cloud` to list the commands. "
-        "See https://docs.app.strix.ai for the API reference.[/]"
+        "[dim]托管平台已就绪。运行 `strix cloud` 查看命令列表，"
+        "API 参考见 https://docs.app.strix.ai。[/]"
     )
 
 
 def _status(console: Console, argv: list[str]) -> int:  # noqa: PLR0912
     parser = _SessionArgumentParser(
         prog="strix cloud whoami",
-        description="Show the stored managed-platform account, workspace, scopes, and expiry.",
+        description="显示已保存的托管平台账号、工作区、权限范围与到期时间。",
     )
-    parser.add_argument("--json", action="store_true", help="Print the session as JSON.")
-    parser.add_argument("--show-scopes", action="store_true", help="Print every granted scope.")
+    parser.add_argument("--json", action="store_true", help="以 JSON 形式打印会话。")
+    parser.add_argument("--show-scopes", action="store_true", help="打印每一个已授予的范围。")
     as_json = "--json" in argv or not sys.stdout.isatty()
     try:
         args = parser.parse_args(argv)
@@ -666,7 +665,7 @@ def _status(console: Console, argv: list[str]) -> int:  # noqa: PLR0912
         if as_json:
             sys.stdout.write(json.dumps({"error": str(exc)}) + "\n")
         else:
-            console.print(f"[red]Error:[/] {_terminal_markup(exc)}")
+            console.print(f"[red]错误：[/] {_terminal_markup(exc)}")
         return 2
     except SystemExit as exc:
         return exc.code if isinstance(exc.code, int) else 2
@@ -677,7 +676,7 @@ def _status(console: Console, argv: list[str]) -> int:  # noqa: PLR0912
         if as_json:
             sys.stdout.write(json.dumps({"signed_in": False, "error": "Not signed in"}) + "\n")
             return 1
-        console.print("[yellow]Not signed in.[/] Run [bold]strix cloud login[/] to sign in.")
+        console.print("[yellow]尚未登录。[/] 运行 [bold]strix cloud login[/] 登录。")
         return 1
     email = record.get("email", "unknown")
     organization = record.get("organization_name") or record.get("organization_id", "")
@@ -694,22 +693,22 @@ def _status(console: Console, argv: list[str]) -> int:  # noqa: PLR0912
         }
         sys.stdout.write(json.dumps(payload, indent=2, default=str) + "\n")
         return 0
-    console.print(f"[green]Signed in[/] as [bold]{_terminal_markup(email)}[/]")
+    console.print(f"[green]已登录[/]，账号 [bold]{_terminal_markup(email)}[/]")
     if organization:
-        console.print(f"  Workspace: {_terminal_markup(organization)}")
+        console.print(f"  工作区：{_terminal_markup(organization)}")
     if expires_at:
-        console.print(f"  Token expires: {_terminal_markup(expires_at)}")
+        console.print(f"  Token 到期时间：{_terminal_markup(expires_at)}")
     if record.get("app_url"):
-        console.print(f"  Platform: {_terminal_markup(record['app_url'])}")
+        console.print(f"  平台：{_terminal_markup(record['app_url'])}")
     scopes = record.get("scopes")
     if isinstance(scopes, list) and scopes:
         scope_items = cast("list[Any]", cast("Any", scopes))
         if args.show_scopes:
             console.print(
-                f"  Scopes: {_terminal_markup(' '.join(str(scope) for scope in scope_items))}"
+                f"  范围：{_terminal_markup(' '.join(str(scope) for scope in scope_items))}"
             )
         else:
-            console.print(f"  Access: {_terminal_markup(_scope_summary(record))}")
+            console.print(f"  权限：{_terminal_markup(_scope_summary(record))}")
     return 0
 
 
@@ -718,19 +717,19 @@ def _scope_summary(record: dict[str, Any]) -> str:
     scope_items = cast("list[Any]", cast("Any", scopes)) if isinstance(scopes, list) else []
     count = len(scope_items)
     profile = str(record.get("scope_profile") or "custom").replace("_", " ").title()
-    return f"{profile} · {count} scope{'s' if count != 1 else ''} granted"
+    return f"{profile} · 已授予 {count} 个范围"
 
 
 def _logout(console: Console, argv: list[str]) -> int:  # noqa: PLR0911, PLR0912
     parser = _SessionArgumentParser(
         prog="strix cloud logout",
-        description="Revoke this CLI session and remove its token from this machine.",
+        description="撤销此 CLI 会话，并从本机删除其 token。",
     )
-    parser.add_argument("--json", action="store_true", help="Print the result as JSON.")
+    parser.add_argument("--json", action="store_true", help="以 JSON 形式打印结果。")
     parser.add_argument(
         "--local-only",
         action="store_true",
-        help="Remove only the local token, leaving the remote session active.",
+        help="只删除本地 token，保留远端会话。",
     )
     as_json = "--json" in argv or not sys.stdout.isatty()
     try:
@@ -739,7 +738,7 @@ def _logout(console: Console, argv: list[str]) -> int:  # noqa: PLR0911, PLR0912
         if as_json:
             sys.stdout.write(json.dumps({"error": str(exc)}) + "\n")
         else:
-            console.print(f"[red]Error:[/] {_terminal_markup(exc)}")
+            console.print(f"[red]错误：[/] {_terminal_markup(exc)}")
         return 2
     except SystemExit as exc:
         return exc.code if isinstance(exc.code, int) else 2
@@ -748,7 +747,7 @@ def _logout(console: Console, argv: list[str]) -> int:  # noqa: PLR0911, PLR0912
         if as_json:
             sys.stdout.write(json.dumps({"signed_in": False, "removed": False}) + "\n")
             return 0
-        console.print("[yellow]Not signed in.[/]")
+        console.print("[yellow]尚未登录。[/]")
         return 0
     record = read_record()
     remotely_revoked = False
@@ -771,8 +770,8 @@ def _logout(console: Console, argv: list[str]) -> int:  # noqa: PLR0911, PLR0912
             )
             return 1
         console.print(
-            f"[red]Could not remove the stored API token.[/] Delete "
-            f"{_terminal_markup(AUTH_PATH)} manually."
+            f"[red]无法删除已保存的 API token。[/] 请手动删除 "
+            f"{_terminal_markup(AUTH_PATH)}。"
         )
         return 1
     if as_json:
@@ -790,9 +789,9 @@ def _logout(console: Console, argv: list[str]) -> int:  # noqa: PLR0911, PLR0912
         return 0
     if args.local_only:
         console.print(
-            "[yellow]Local sign-out only.[/] The remote CLI session is still active; "
-            "revoke it from API Access if needed."
+            "[yellow]仅本地登出。[/] 远端 CLI 会话仍然有效；"
+            "如需撤销，请在 API Access 中操作。"
         )
     else:
-        console.print("[green]Signed out.[/] The CLI session was revoked and removed locally.")
+        console.print("[green]已登出。[/] CLI 会话已撤销并在本地删除。")
     return 0

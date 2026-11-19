@@ -30,7 +30,7 @@ func statusIcon(status string) (string, lipgloss.Style) {
 // data, the run log, and the `strix view` viewer.
 func renderGenericTool(name string, args map[string]any, status string) string {
 	var b strings.Builder
-	b.WriteString(Dim().Render("→ Using tool ") + Bold(Blue).Render(name) + "\n")
+	b.WriteString(Dim().Render("→ 使用工具 ") + Bold(Blue).Render(name) + "\n")
 	for _, k := range SortedKeys(args) {
 		b.WriteString("  " + Dim().Render(k) + ": " + StringValue(args[k]) + "\n")
 	}
@@ -155,14 +155,10 @@ func CollapseTool(full, name string, expanded bool) (string, bool) {
 		return full, false
 	}
 	if expanded {
-		return full + "\n" + Dim().Italic(true).Render("  ▲ click to collapse"), true
+		return full + "\n" + Dim().Italic(true).Render("  ▲ 点击收起"), true
 	}
 	preview := strings.Join(lines[:maxLines], "\n")
 	hidden := len(lines) - maxLines
-	plural := "s"
-	if hidden == 1 {
-		plural = ""
-	}
-	hint := Dim().Italic(true).Render(fmt.Sprintf("  … +%d line%s — click to expand", hidden, plural))
+	hint := Dim().Italic(true).Render(fmt.Sprintf("  … 另有 %d 行 — 点击展开", hidden))
 	return preview + "\n" + hint, true
 }

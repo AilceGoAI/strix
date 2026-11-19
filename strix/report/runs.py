@@ -84,10 +84,10 @@ def _describe_target(record: dict[str, Any]) -> str:
     if originals:
         if len(originals) == 1:
             return originals[0]
-        return f"{originals[0]} +{len(originals) - 1} more"
+        return f"{originals[0]}（另有 {len(originals) - 1} 个）"
     mount = record.get("workspace_mount")
     if isinstance(mount, str) and mount:
-        return f"{mount} (workspace)"
+        return f"{mount}（工作区）"
     instruction = str(record.get("user_instruction") or record.get("instruction") or "").strip()
     return instruction.splitlines()[0] if instruction else ""
 

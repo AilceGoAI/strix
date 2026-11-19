@@ -14,7 +14,7 @@ import (
 func renderUserMessage(content string) string {
 	bar := Col(Blue).Render("▍")
 	var b strings.Builder
-	b.WriteString(bar + " " + lipgloss.NewStyle().Bold(true).Render("You:"))
+	b.WriteString(bar + " " + lipgloss.NewStyle().Bold(true).Render("你："))
 	for _, line := range strings.Split(content, "\n") {
 		b.WriteString("\n" + bar + " " + line)
 	}

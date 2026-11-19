@@ -34,7 +34,7 @@ function formatOutput(output: string): string {
   const hiddenCount = lines.length - HEAD - TAIL;
   return [
     ...lines.slice(0, HEAD).map(truncateLine),
-    `... ${hiddenCount} lines truncated ...`,
+    `…… 已截断 ${hiddenCount} 行 ……`,
     ...lines.slice(-TAIL).map(truncateLine),
   ].join("\n");
 }
@@ -49,9 +49,9 @@ export default function PythonRenderer({ args, result }: ToolRendererProps) {
   else if (typeof res === "string") stdout = res;
 
   const subtitle =
-    action === "new_session" ? "new session" :
-    action === "close" ? "close session" :
-    action === "list_sessions" ? "list sessions" : null;
+    action === "new_session" ? "新会话" :
+    action === "close" ? "关闭会话" :
+    action === "list_sessions" ? "列出会话" : null;
 
   const output = stdout ? formatOutput(cleanOutput(stdout)) : null;
 

@@ -20,7 +20,7 @@ export default function VulnReportDeleteRenderer({ args, result, status }: ToolR
   const severity = typeof res?.severity === "string" ? res.severity.toLowerCase() : "";
   const failed = res != null ? !ok : status === "failed" || status === "error";
   const pending = res == null && !failed;
-  const label = pending ? "withdrawing report\u2026" : failed ? "report not withdrawn" : "report withdrawn";
+  const label = pending ? "正在撤回报告\u2026" : failed ? "报告未撤回" : "报告已撤回";
   const labelColor = pending ? "text-[#888]" : failed ? "text-red-400/80" : "text-yellow-400/80";
 
   return (
@@ -39,7 +39,7 @@ export default function VulnReportDeleteRenderer({ args, result, status }: ToolR
       {title && <div className="text-[15px] text-white/60 line-through">{title}</div>}
       {reason && (
         <div>
-          <span className="text-emerald-400/60 text-sm font-semibold">Why</span>
+          <span className="text-emerald-400/60 text-sm font-semibold">原因</span>
           <div className="mt-1"><TruncatedText text={reason} maxLines={10} /></div>
         </div>
       )}

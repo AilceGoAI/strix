@@ -52,12 +52,12 @@ _CODE_LOCATION_FIELDS = (
 
 def _validate_file_path(path: str) -> str | None:
     if not path or not path.strip():
-        return "file path cannot be empty"
+        return "file path 不能为空"
     p = PurePosixPath(path)
     if p.is_absolute():
-        return f"file path must be relative, got absolute: '{path}'"
+        return f"file path 必须是相对路径，收到的是绝对路径：'{path}'"
     if ".." in p.parts:
-        return f"file path must not contain '..': '{path}'"
+        return f"file path 不能包含 '..'：'{path}'"
     return None
 
 
@@ -99,14 +99,16 @@ def _validate_code_locations(locations: list[dict[str, Any]]) -> list[str]:
             errors.append(f"code_locations[{i}]: {path_err}")
         start = loc.get("start_line")
         if not isinstance(start, int) or start < 1:
-            errors.append(f"code_locations[{i}]: start_line must be a positive integer")
+            errors.append(f"code_locations[{i}]: start_line 必须为正整数")
         end = loc.get("end_line")
         if end is None:
-            errors.append(f"code_locations[{i}]: end_line is required")
+            errors.append(f"code_locations[{i}]: end_line 为必填项")
         elif not isinstance(end, int) or end < 1:
-            errors.append(f"code_locations[{i}]: end_line must be a positive integer")
+            errors.append(f"code_locations[{i}]: end_line 必须为正整数")
         elif isinstance(start, int) and end < start:
-            errors.append(f"code_locations[{i}]: end_line ({end}) must be >= start_line ({start})")
+            errors.append(
+                f"code_locations[{i}]: end_line（{end}）必须大于等于 start_line（{start}）"
+            )
     return errors
 
 
@@ -117,7 +119,7 @@ def _extract_cve(cve: str) -> str:
 
 def _validate_cve(cve: str) -> str | None:
     if not re.match(r"^CVE-\d{4}-\d{4,}$", cve):
-        return f"invalid CVE format: '{cve}' (expected 'CVE-YYYY-NNNNN')"
+        return f"CVE 格式无效：'{cve}'（应为 'CVE-YYYY-NNNNN'）"
     return None
 
 
@@ -128,7 +130,7 @@ def _extract_cwe(cwe: str) -> str:
 
 def _validate_cwe(cwe: str) -> str | None:
     if not re.match(r"^CWE-\d+$", cwe):
-        return f"invalid CWE format: '{cwe}' (expected 'CWE-NNN')"
+        return f"CWE 格式无效：'{cwe}'（应为 'CWE-NNN'）"
     return None
 
 
@@ -147,7 +149,7 @@ def _calculate_cvss(breakdown: dict[str, str]) -> tuple[float, str, str]:
         score = cvss.scores()[0]
         base_severity = cvss.severities()[0].lower()
     except Exception as exc:
-        msg = f"Failed to calculate CVSS for validated vector: {vector}"
+        msg = f"无法为已校验的向量计算 CVSS：{vector}"
         raise ValueError(msg) from exc
 
     severity = "info" if base_severity == "none" else base_severity
@@ -155,16 +157,16 @@ def _calculate_cvss(breakdown: dict[str, str]) -> tuple[float, str, str]:
 
 
 _REQUIRED_FIELDS = {
-    "title": "Title cannot be empty",
-    "description": "Description cannot be empty",
-    "impact": "Impact cannot be empty",
-    "target": "Target cannot be empty",
-    "technical_analysis": "Technical analysis cannot be empty",
-    "poc_description": "PoC description cannot be empty",
-    "poc_script_code": "PoC script/code is REQUIRED - provide the actual exploit/payload",
-    "remediation_steps": "Remediation steps cannot be empty",
-    "evidence": "Evidence cannot be empty - provide concrete proof of the finding",
-    "assumptions": "Assumptions cannot be empty - state exploitability prerequisites",
+    "title": "title 不能为空",
+    "description": "description 不能为空",
+    "impact": "impact 不能为空",
+    "target": "target 不能为空",
+    "technical_analysis": "technical_analysis 不能为空",
+    "poc_description": "poc_description 不能为空",
+    "poc_script_code": "poc_script_code 为必填项 - 请提供实际可用的利用代码/payload",
+    "remediation_steps": "remediation_steps 不能为空",
+    "evidence": "evidence 不能为空 - 请提供该发现的切实证据",
+    "assumptions": "assumptions 不能为空 - 请说明可利用性的前提条件",
 }
 
 _VALID_FIX_EFFORT = frozenset({"trivial", "low", "medium", "high"})
@@ -185,46 +187,43 @@ def _normalize_http_exchange_ids(raw: Any) -> tuple[list[str] | None, list[str]]
     if raw is None:
         return None, []
     if not isinstance(raw, list):
-        return None, ["http_exchange_ids must be a list of proxy request ids"]
+        return None, ["http_exchange_ids 必须是代理请求 id 的列表"]
 
     normalized: list[str] = []
     errors: list[str] = []
     seen: set[str] = set()
     for index, value in enumerate(raw):
         if not isinstance(value, str):
-            errors.append(f"http_exchange_ids[{index}] must be a string")
+            errors.append(f"http_exchange_ids[{index}] 必须是字符串")
             continue
         request_id = value.strip()
         if not request_id:
-            errors.append(f"http_exchange_ids[{index}] cannot be empty")
+            errors.append(f"http_exchange_ids[{index}] 不能为空")
             continue
         if len(request_id) > _MAX_HTTP_EXCHANGE_ID_CHARS:
             errors.append(
-                f"http_exchange_ids[{index}] must be {_MAX_HTTP_EXCHANGE_ID_CHARS} "
-                "characters or fewer"
+                f"http_exchange_ids[{index}] 不能超过 {_MAX_HTTP_EXCHANGE_ID_CHARS} 个字符"
             )
             continue
         if any(ord(char) < 0x21 or ord(char) > 0x7E for char in request_id):
-            errors.append(f"http_exchange_ids[{index}] must contain only visible ASCII characters")
+            errors.append(f"http_exchange_ids[{index}] 只能包含可见 ASCII 字符")
             continue
         if not request_id.isdigit():
-            errors.append(f"http_exchange_ids[{index}] must be a numeric proxy request id")
+            errors.append(f"http_exchange_ids[{index}] 必须是数字形式的代理请求 id")
             continue
         if request_id not in seen:
             seen.add(request_id)
             normalized.append(request_id)
             if len(normalized) > _MAX_HTTP_EXCHANGE_IDS:
                 errors.append(
-                    f"http_exchange_ids can contain at most "
-                    f"{_MAX_HTTP_EXCHANGE_IDS} distinct request ids"
+                    f"http_exchange_ids 最多只能包含 {_MAX_HTTP_EXCHANGE_IDS} 个不同的请求 id"
                 )
                 break
     return normalized, errors
 
 
 _HTTP_EXCHANGE_UNVERIFIED_WARNING = (
-    "http_exchange_ids were stored without verification because the proxy project did "
-    "not respond in time. Ids that do not exist in the project will not render as evidence."
+    "代理项目未及时响应，http_exchange_ids 未经校验即被保存。项目中不存在的 id 不会作为证据渲染。"
 )
 
 
@@ -256,10 +255,7 @@ async def _verify_http_exchange_ids(
     if missing_ids:
         return (
             None,
-            [
-                "http_exchange_ids do not exist in the current proxy project: "
-                + ", ".join(missing_ids)
-            ],
+            ["http_exchange_ids 在当前代理项目中不存在：" + ", ".join(missing_ids)],
             None,
         )
     return request_ids, [], None
@@ -274,9 +270,9 @@ def _with_warning(result: dict[str, Any], warning: str | None) -> dict[str, Any]
 def _validate_cvss_breakdown(breakdown: Any) -> list[str]:
     """Check the 8 CVSS metrics are all present with legal values."""
     if not isinstance(breakdown, dict) or not breakdown:
-        return ["cvss_breakdown: must be an object with the 8 CVSS metrics"]
+        return ["cvss_breakdown: 必须是包含 8 项 CVSS 指标的对象"]
     return [
-        f"Invalid {name}: {breakdown.get(name)}. Must be one of: {valid}"
+        f"无效的 {name}：{breakdown.get(name)}。必须是以下之一：{valid}"
         for name, valid in _CVSS_VALID.items()
         if breakdown.get(name) not in valid
     ]
@@ -311,23 +307,22 @@ def _validate_analysis_fields(
     errors: list[str] = []
     if not str(counterevidence or "").strip():
         errors.append(
-            "Counterevidence cannot be empty - state the strongest evidence against "
-            "this finding, or what you checked and found none (e.g. 'no input "
-            "validation, WAF, or authorization check found on this path')"
+            "counterevidence 不能为空 - 请说明针对该发现的最强反向证据，"
+            "或说明你检查了什么而确实没有找到（例如：'该路径上没有输入校验、"
+            "WAF 或授权检查'）"
         )
     if not str(severity_change_conditions or "").strip():
         errors.append(
-            "severity_change_conditions cannot be empty - state the one concrete piece "
-            "of evidence that would raise or lower the severity"
+            "severity_change_conditions 不能为空 - 请说明哪一项具体证据会提高或降低严重程度"
         )
     if confidence not in _VALID_CONFIDENCE:
         errors.append(
-            f"Invalid confidence: {confidence!r}. Must be one of: {sorted(_VALID_CONFIDENCE)}"
+            f"无效的 confidence：{confidence!r}。必须是以下之一：{sorted(_VALID_CONFIDENCE)}"
         )
     elif confidence != "high" and not str(confidence_rationale or "").strip():
         errors.append(
-            "confidence_rationale is required when confidence is not 'high' - name the "
-            "gap (e.g. static-only trace, unconfirmed reachability, no runtime access)"
+            "当 confidence 不是 'high' 时必须提供 confidence_rationale - "
+            "请说明缺口（例如：仅静态追踪、可达性未确认、无运行时访问权限）"
         )
     return errors
 
@@ -342,16 +337,14 @@ def _validate_fix_verification(
     if str(fix_verification or "").strip():
         return []
     return [
-        "fix_verification is REQUIRED when any code_location carries a 'fix_after' - "
-        "a suggestion a reviewer can click to apply must be verified first. State, in "
-        "order: (1) security closure - re-trace the source->sink path through the "
-        "PATCHED code and say why it is now blocked; (2) bypass review - re-read the "
-        "diff without your original rationale and name the equivalent sinks, sibling "
-        "call sites, and alternate malicious input classes you checked; (3) preserved "
-        "behavior - the legitimate inputs, APIs, and error semantics that still work; "
-        "(4) how each was checked (executed vs. reasoned), naming any unrun check as "
-        "an explicit gap. If you cannot make these statements, drop 'fix_after' and "
-        "leave the location informational."
+        "当任一 code_location 带有 'fix_after' 时 fix_verification 为必填项 - "
+        "审查者可一键应用的修复建议必须先经过验证。请按顺序说明："
+        "(1) 安全闭环 - 在修补后的代码上重新追踪 source->sink 路径，说明为何现在已被阻断；"
+        "(2) 绕过审查 - 不带原有理由重读 diff，列出你检查过的等价 sink、同类调用点和"
+        "其他恶意输入类别；"
+        "(3) 行为保持 - 仍然可用的合法输入、API 和错误语义；"
+        "(4) 每项是如何检查的（实际执行还是仅推理），把未执行的检查明确列为缺口。"
+        "如果你无法做出这些说明，请去掉 'fix_after'，让该位置仅作为信息参考。"
     ]
 
 
@@ -410,7 +403,7 @@ def _collect_update_changes(  # noqa: PLR0912, PLR0915
         confidence = confidence.lower()
         if confidence not in _VALID_CONFIDENCE:
             errors.append(
-                f"Invalid confidence: {confidence!r}. Must be one of: {sorted(_VALID_CONFIDENCE)}"
+                f"无效的 confidence：{confidence!r}。必须是以下之一：{sorted(_VALID_CONFIDENCE)}"
             )
         else:
             changes["confidence"] = confidence
@@ -420,7 +413,7 @@ def _collect_update_changes(  # noqa: PLR0912, PLR0915
         fix_effort = fix_effort.lower()
         if fix_effort not in _VALID_FIX_EFFORT:
             errors.append(
-                f"Invalid fix_effort: {fix_effort!r}. Must be one of: {sorted(_VALID_FIX_EFFORT)}"
+                f"无效的 fix_effort：{fix_effort!r}。必须是以下之一：{sorted(_VALID_FIX_EFFORT)}"
             )
         else:
             changes["fix_effort"] = fix_effort
@@ -449,8 +442,7 @@ def _collect_update_changes(  # noqa: PLR0912, PLR0915
         changes["code_locations"] = locations
     elif raw_locations:
         errors.append(
-            "code_locations were dropped as unusable - every location needs a relative "
-            "'file' and an integer 'start_line'"
+            "code_locations 因不可用而被丢弃 - 每个位置都需要相对路径的 'file' 和整数 'start_line'"
         )
 
     cve, cwe, identifier_errors = _validate_identifiers(
@@ -500,9 +492,9 @@ def _reject_cross_class_revision(
     return {
         "success": False,
         "error": (
-            f"Report '{report_id}' is a {matched_class} finding, so it cannot carry "
-            f"{', '.join(offending)}. File your proof as its own vulnerability report "
-            "instead of writing it onto this one."
+            f"报告 '{report_id}' 属于 {matched_class} 类发现，因此不能携带 "
+            f"{', '.join(offending)}。请把你的证据单独作为一份漏洞报告提交，"
+            "而不是写入这份报告。"
         ),
         "report_id": report_id,
         "finding_class": matched_class,
@@ -532,21 +524,20 @@ def _rate_dependency_revision(
     if breakdown is None and not metadata.get("contextual_cvss_breakdown"):
         return {
             "success": False,
-            "error": "Validation failed",
+            "error": "校验失败",
             "errors": [
-                "cvss_breakdown is required: this dependency finding carries no "
-                "contextual rating yet, so contextual_cvss_reasoning has nothing to explain"
+                "cvss_breakdown 为必填项：该依赖发现尚无上下文评级，"
+                "因此 contextual_cvss_reasoning 没有可解释的对象"
             ],
             "report_id": report_id,
         }
     if reasoning is None:
         return {
             "success": False,
-            "error": "Validation failed",
+            "error": "校验失败",
             "errors": [
-                "contextual_cvss_reasoning is required: a dependency finding is re-rated "
-                "with the cvss_breakdown observed in this codebase together with the "
-                "reasoning a reader can check"
+                "contextual_cvss_reasoning 为必填项：依赖发现需要结合在本代码库中"
+                "观察到的 cvss_breakdown 重新评级，并给出读者可以核对的理由"
             ],
             "report_id": report_id,
         }
@@ -604,18 +595,17 @@ def _read_revision(
         return {}, {
             "success": False,
             "error": (
-                f"{missing} cannot be empty - name the report you are revising and state "
-                "what you learned that it does not yet carry"
+                f"{missing} 不能为空 - 请指明你要修订的报告，并说明你了解到哪些该报告尚未包含的信息"
             ),
         }
 
     changes, errors = _collect_update_changes(fields)
     if errors:
-        return {}, {"success": False, "error": "Validation failed", "errors": errors}
+        return {}, {"success": False, "error": "校验失败", "errors": errors}
     if not changes:
         return {}, {
             "success": False,
-            "error": "No fields to update - pass at least one field you want to replace",
+            "error": "没有需要更新的字段 - 请至少传入一个你想替换的字段",
         }
     return changes, None
 
@@ -645,7 +635,7 @@ def _do_update(
     if report_state is None:
         return {
             "success": False,
-            "error": "Report state unavailable - no reports have been filed yet",
+            "error": "报告状态不可用 - 尚未提交任何报告",
         }
 
     class_error = _fit_revision_to_class(report_state, report_id, changes)
@@ -664,18 +654,15 @@ def _do_update(
         logger.exception("update_vulnerability_report persistence failed")
         return {
             "success": False,
-            "error": (
-                f"Failed to revise report '{report_id}': {e!s}. "
-                "The report still carries its previous content; retry the update."
-            ),
+            "error": (f"修订报告 '{report_id}' 失败：{e!s}。报告仍保留原有内容；请重试本次更新。"),
             "report_id": report_id,
         }
     if updated is None:
         known = [r.get("id") for r in report_state.get_existing_vulnerabilities()]
         if report_id not in known:
-            error = f"Report with id '{report_id}' not found"
+            error = f"未找到 id 为 '{report_id}' 的报告"
         else:
-            error = f"Report '{report_id}' already says this - nothing in your update changes it"
+            error = f"报告 '{report_id}' 已包含这些内容 - 你的更新没有改变任何东西"
         return {"success": False, "error": error, "report_id": report_id}
 
     logger.info(
@@ -688,7 +675,7 @@ def _do_update(
     return {
         "success": True,
         "action": "updated",
-        "message": f"Report '{report_id}' now carries your revision. Do not file it again.",
+        "message": f"报告 '{report_id}' 已应用你的修订。请不要再重复提交。",
         "report_id": report_id,
         "updated_fields": sorted(changes),
         "severity": updated.get("severity"),
@@ -714,10 +701,7 @@ def _do_delete(
         missing = "report_id" if not report_id else "delete_reason"
         return {
             "success": False,
-            "error": (
-                f"{missing} cannot be empty - name the report you are withdrawing and state "
-                "what disproved it"
-            ),
+            "error": (f"{missing} 不能为空 - 请指明你要撤回的报告，并说明是什么推翻了它"),
         }
 
     from strix.report.state import ReportRollbackError, get_global_report_state
@@ -726,7 +710,7 @@ def _do_delete(
     if report_state is None:
         return {
             "success": False,
-            "error": "Report state unavailable - no reports have been filed yet",
+            "error": "报告状态不可用 - 尚未提交任何报告",
         }
 
     try:
@@ -740,20 +724,19 @@ def _do_delete(
         logger.exception("delete_vulnerability_report persistence failed")
         if isinstance(e, ReportRollbackError):
             outcome = (
-                f"{e.cause!s}. The report is still on file, but its on-disk indexes could "
-                "not be rewritten and may be stale until the next report is saved"
+                f"{e.cause!s}。报告仍在档案中，但其磁盘索引无法重写，在下次保存报告前可能都是过期的"
             )
         else:
-            outcome = f"{e!s}. The report is still on file"
+            outcome = f"{e!s}。报告仍在档案中"
         return {
             "success": False,
-            "error": f"Failed to delete report '{report_id}': {outcome}; retry the deletion.",
+            "error": f"删除报告 '{report_id}' 失败：{outcome}；请重试删除。",
             "report_id": report_id,
         }
     if deleted is None:
         return {
             "success": False,
-            "error": f"Report with id '{report_id}' not found",
+            "error": f"未找到 id 为 '{report_id}' 的报告",
             "report_id": report_id,
         }
 
@@ -767,9 +750,8 @@ def _do_delete(
         "success": True,
         "action": "deleted",
         "message": (
-            f"Report '{report_id}' ({deleted.get('title')}) is withdrawn and no longer "
-            "counts as a finding of this scan. Do not file it again unless new evidence "
-            "proves it."
+            f"报告 '{report_id}'（{deleted.get('title')}）已撤回，"
+            "不再计入本次扫描的发现。除非有新证据证明它，否则请不要再提交。"
         ),
         "report_id": report_id,
         "title": deleted.get("title"),
@@ -834,7 +816,7 @@ async def _do_create(
     fix_effort = (fix_effort or "").strip().lower()
     if fix_effort not in _VALID_FIX_EFFORT:
         errors.append(
-            f"Invalid fix_effort: {fix_effort!r}. Must be one of: {sorted(_VALID_FIX_EFFORT)}"
+            f"无效的 fix_effort：{fix_effort!r}。必须是以下之一：{sorted(_VALID_FIX_EFFORT)}"
         )
 
     errors.extend(_validate_cvss_breakdown(cvss_breakdown))
@@ -851,12 +833,12 @@ async def _do_create(
     errors.extend(http_exchange_errors)
 
     if errors:
-        return {"success": False, "error": "Validation failed", "errors": errors}
+        return {"success": False, "error": "校验失败", "errors": errors}
 
     try:
         cvss_score, severity, _vector = _calculate_cvss(cvss_breakdown)
     except ValueError as exc:
-        return {"success": False, "error": "Validation failed", "errors": [str(exc)]}
+        return {"success": False, "error": "校验失败", "errors": [str(exc)]}
 
     try:
         from strix.report.state import get_global_report_state
@@ -866,8 +848,8 @@ async def _do_create(
             logger.warning("No global report state; vulnerability report not persisted")
             return {
                 "success": True,
-                "message": f"Vulnerability report '{title}' created (not persisted)",
-                "warning": "Report could not be persisted - report state unavailable",
+                "message": f"漏洞报告 '{title}' 已创建（未持久化）",
+                "warning": "报告无法持久化 - 报告状态不可用",
             }
 
         from strix.report.dedupe import check_duplicate
@@ -917,14 +899,14 @@ async def _do_create(
         if dedupe.get("is_duplicate"):
             duplicate_id = str(dedupe.get("duplicate_id") or "")
             duplicate_title = next(
-                (r.get("title", "Unknown") for r in existing if r.get("id") == duplicate_id),
+                (r.get("title", "未知") for r in existing if r.get("id") == duplicate_id),
                 "",
             )
             return {
                 "success": False,
                 "error": (
-                    f"Potential duplicate of '{duplicate_title}' "
-                    f"(id={duplicate_id[:8]}...) — do not re-report the same vulnerability"
+                    f"可能是 '{duplicate_title}' 的重复报告 "
+                    f"(id={duplicate_id[:8]}...) —— 请勿重复报告同一漏洞"
                 ),
                 "duplicate_of": duplicate_id,
                 "duplicate_title": duplicate_title,
@@ -941,10 +923,7 @@ async def _do_create(
         logger.exception("create_vulnerability_report persistence failed")
         return {
             "success": False,
-            "error": (
-                f"Failed to create vulnerability report: {e!s}. "
-                "The finding was not stored; file it again."
-            ),
+            "error": (f"创建漏洞报告失败：{e!s}。该发现未被保存；请重新提交。"),
         }
     else:
         logger.info(
@@ -956,7 +935,7 @@ async def _do_create(
         )
         return {
             "success": True,
-            "message": f"Vulnerability report '{title}' created successfully",
+            "message": f"漏洞报告 '{title}' 创建成功",
             "report_id": report_id,
             "severity": severity,
             "cvss_score": cvss_score,
@@ -1420,7 +1399,7 @@ async def create_vulnerability_report(
         return json.dumps(
             {
                 "success": False,
-                "error": "Validation failed",
+                "error": "校验失败",
                 "errors": http_exchange_errors,
             },
             ensure_ascii=False,
@@ -1576,7 +1555,7 @@ async def update_vulnerability_report(
         return json.dumps(
             {
                 "success": False,
-                "error": "Validation failed",
+                "error": "校验失败",
                 "errors": http_exchange_errors,
             },
             ensure_ascii=False,
@@ -1697,17 +1676,16 @@ def _validate_manifest_path(manifest_path: str | None) -> str | None:
     path = (manifest_path or "").strip()
     if not path:
         return (
-            "manifest_path is required: pass the repo-relative path of the "
-            "lockfile/manifest where the vulnerable version was observed "
-            "(trivy's Target, e.g. 'package-lock.json' or "
-            "'services/api/pom.xml'). It binds the finding to its exact file "
-            "so remediation can target the right repository."
+            "manifest_path 为必填项：请传入观察到该漏洞版本的 lockfile/manifest 的"
+            "仓库相对路径（trivy 的 Target，例如 'package-lock.json' 或 "
+            "'services/api/pom.xml'）。它把该发现绑定到确切的文件，"
+            "以便修复定位到正确的仓库。"
         )
     if path.startswith("/") or "\\" in path or path.split("/")[0].endswith(":"):
-        return f"manifest_path must be a relative path within the repository, got {path!r}"
+        return f"manifest_path 必须是仓库内的相对路径，收到的是 {path!r}"
     segments = path.split("/")
     if any(segment in ("", ".", "..") for segment in segments):
-        return f"manifest_path must not contain empty, '.', or '..' segments, got {path!r}"
+        return f"manifest_path 不能包含空段、'.' 或 '..'，收到的是 {path!r}"
     return None
 
 
@@ -1721,25 +1699,23 @@ def _validate_contextual_cvss(
     errors: list[str] = []
     if not breakdown:
         errors.append(
-            "contextual_cvss_breakdown is required: rate the CVE in this codebase with "
-            "all 8 CVSS v3.1 metrics (attack_vector, attack_complexity, "
-            "privileges_required, user_interaction, scope, confidentiality, integrity, "
-            "availability). When your trace does not change the published rating, repeat "
-            "the advisory's own metrics and adjust only what the usage level proves - a "
-            "package the code never imports is normally N on all three impact metrics."
+            "contextual_cvss_breakdown 为必填项：请用完整的 8 项 CVSS v3.1 指标"
+            "（attack_vector、attack_complexity、privileges_required、user_interaction、"
+            "scope、confidentiality、integrity、availability）为本代码库中的该 CVE 评级。"
+            "当你的追踪不改变已公布的评分时，重复公告自身的指标，只调整使用情况能够"
+            "证明的部分 - 代码从未导入的包，三项影响指标通常都是 N。"
         )
     else:
         for name, valid in _CVSS_VALID.items():
             value = breakdown.get(name)
             if value not in valid:
                 errors.append(
-                    f"Invalid contextual_cvss_breakdown {name}: {value}. Must be one of: {valid}"
+                    f"无效的 contextual_cvss_breakdown {name}：{value}。必须是以下之一：{valid}"
                 )
     if not (reasoning or "").strip():
         errors.append(
-            "contextual_cvss_reasoning is required: state what you observed in this "
-            "codebase that justifies the contextual rating. A contextual score with "
-            "no reasoning is not shown."
+            "contextual_cvss_reasoning 为必填项：请说明你在本代码库中观察到什么，"
+            "从而支持这一上下文评级。只有分数而没有理由的上下文评级不会被展示。"
         )
     return errors
 
@@ -1747,13 +1723,12 @@ def _validate_contextual_cvss(
 def _validate_advisory_cvss(advisory_cvss: float | None) -> str | None:
     if advisory_cvss is None:
         return (
-            "advisory_cvss is required: read the published advisory base score "
-            "(0.0-10.0) off the advisory (trivy CVSS / NVD / GHSA). It is the "
-            "published reference the finding is rated against — do not omit it "
-            "or the finding cannot be rated."
+            "advisory_cvss 为必填项：请从公告中读取已公布的基准分（0.0-10.0）"
+            "（trivy CVSS / NVD / GHSA）。它是该发现评级所对照的公布参考值 —— "
+            "不要省略，否则该发现无法评级。"
         )
     if not 0.0 <= advisory_cvss <= 10.0:
-        return f"advisory_cvss must be between 0.0 and 10.0, got {advisory_cvss}"
+        return f"advisory_cvss 必须在 0.0 到 10.0 之间，收到的是 {advisory_cvss}"
     return None
 
 
@@ -1830,14 +1805,9 @@ def _build_dependency_metadata(
 
 
 _REACHABILITY_EVIDENCE_LABELS = {
-    "reachable": "the advisory's vulnerable code runs in this codebase",
-    "not_reachable": (
-        "the package is loaded, but this advisory's vulnerable code does not run here"
-    ),
-    "not_applicable": (
-        "the advisory does not apply here: the vulnerable package is not loaded, "
-        "or the installed copy is not affected"
-    ),
+    "reachable": "公告中的易受攻击代码在本代码库中运行",
+    "not_reachable": ("包已被加载，但该公告的易受攻击代码在此处不运行"),
+    "not_applicable": ("该公告在此处不适用：易受攻击的包未被加载，或已安装的版本不受影响"),
 }
 
 
@@ -1852,22 +1822,16 @@ def _build_dependency_evidence(
     reachability: str | None = None,
     reachability_evidence: str | None = None,
 ) -> str:
-    evidence = (
-        f"**Advisory evidence:** `{cve}` applies to `{package_name}` "
-        f"at installed version `{installed_version}`."
-    )
+    evidence = f"**公告证据:** `{cve}` 适用于已安装版本 `{installed_version}` 的 `{package_name}`。"
     if fixed_version and fixed_version.strip():
-        evidence += f" The advisory is fixed in `{fixed_version.strip()}`."
+        evidence += f" 该公告在 `{fixed_version.strip()}` 中已修复。"
     if introduced_by and introduced_by.strip():
-        evidence += (
-            f"\n\n**Transitive dependency:** introduced by the direct "
-            f"dependency `{introduced_by.strip()}`."
-        )
+        evidence += f"\n\n**传递依赖:** 由直接依赖 `{introduced_by.strip()}` 引入。"
     if dependency_path and dependency_path.strip():
-        evidence += f"\n\n**Dependency chain:** `{dependency_path.strip()}`"
+        evidence += f"\n\n**依赖链:** `{dependency_path.strip()}`"
     label = _REACHABILITY_EVIDENCE_LABELS.get((reachability or "").strip().lower())
     if label:
-        evidence += f"\n\n**Usage analysis:** {label}."
+        evidence += f"\n\n**使用情况分析:** {label}。"
         if reachability_evidence and reachability_evidence.strip():
             evidence += f" {reachability_evidence.strip()}"
     return evidence
@@ -1916,7 +1880,7 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
     }
     for name, value in required.items():
         if not str(value or "").strip():
-            errors.append(f"{name} cannot be empty")
+            errors.append(f"{name} 不能为空")
 
     parsed_cve = _extract_cve(cve or "")
     cve_err = _validate_cve(parsed_cve)
@@ -1932,7 +1896,7 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
     fix_effort = (fix_effort or "").strip().lower()
     if fix_effort not in _VALID_FIX_EFFORT:
         errors.append(
-            f"Invalid fix_effort: {fix_effort!r}. Must be one of: {sorted(_VALID_FIX_EFFORT)}"
+            f"无效的 fix_effort：{fix_effort!r}。必须是以下之一：{sorted(_VALID_FIX_EFFORT)}"
         )
 
     manifest_err = _validate_manifest_path(manifest_path)
@@ -1944,27 +1908,25 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
         errors.extend(_validate_code_locations(parsed_locations))
     elif code_locations:
         errors.append(
-            "code_locations were dropped as unusable - every location needs a relative "
-            "'file' and an integer 'start_line'"
+            "code_locations 因不可用而被丢弃 - 每个位置都需要相对路径的 'file' 和整数 'start_line'"
         )
     errors.extend(_validate_fix_verification(parsed_locations, fix_verification))
 
     reachability = (reachability or "").strip().lower()
     if not reachability:
         errors.append(
-            "reachability is required: 'reachable', 'not_reachable' or 'not_applicable'. "
-            "There is no 'unknown': finish the usage analysis for this CVE before filing it."
+            "reachability 为必填项：'reachable'、'not_reachable' 或 'not_applicable'。"
+            "没有 'unknown'：提交前请完成对该 CVE 的使用情况分析。"
         )
     elif reachability not in _VALID_REACHABILITY:
         errors.append(
-            f"Invalid reachability: {reachability!r}. Must be one of: {sorted(_VALID_REACHABILITY)}"
+            f"无效的 reachability：{reachability!r}。必须是以下之一：{sorted(_VALID_REACHABILITY)}"
         )
     elif not (reachability_evidence or "").strip():
         errors.append(
-            "reachability_evidence is required: cite the concrete proof (the call site "
-            "and its source-to-sink trace for 'reachable'; the complete search or the "
-            "condition that keeps the vulnerable path from running for 'not_reachable'; "
-            "the search scope for 'not_applicable'). Never claim a verdict without evidence."
+            "reachability_evidence 为必填项：请给出具体证据（'reachable' 需要调用点及其"
+            "source-to-sink 追踪；'not_reachable' 需要完整搜索过程或阻止易受攻击路径运行的"
+            "条件；'not_applicable' 需要说明搜索范围）。没有证据就不要给出结论。"
         )
 
     errors.extend(_validate_contextual_cvss(contextual_cvss_breakdown, contextual_cvss_reasoning))
@@ -1974,14 +1936,14 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
         errors.append(advisory_err)
 
     if errors:
-        return {"success": False, "error": "Validation failed", "errors": errors}
+        return {"success": False, "error": "校验失败", "errors": errors}
 
     try:
         cvss_score, severity, contextual_score, contextual_vector = _resolve_dependency_rating(
             advisory_cvss, contextual_cvss_breakdown
         )
     except ValueError as exc:
-        return {"success": False, "error": "Validation failed", "errors": [str(exc)]}
+        return {"success": False, "error": "校验失败", "errors": [str(exc)]}
     dependency_metadata = _build_dependency_metadata(
         package_name=package_name,
         installed_version=installed_version,
@@ -2017,8 +1979,8 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
             logger.warning("No global report state; dependency report not persisted")
             return {
                 "success": True,
-                "message": f"Dependency finding '{title}' created (not persisted)",
-                "warning": "Report could not be persisted - report state unavailable",
+                "message": f"依赖发现 '{title}' 已创建（未持久化）",
+                "warning": "报告无法持久化 - 报告状态不可用",
             }
 
         from strix.report.dedupe import check_duplicate
@@ -2037,10 +1999,7 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
             duplicate_id = dedupe.get("duplicate_id", "")
             return {
                 "success": False,
-                "error": (
-                    f"Potential duplicate (id={duplicate_id[:8]}...) — "
-                    "do not re-report the same dependency finding"
-                ),
+                "error": (f"潜在重复 (id={duplicate_id[:8]}...) —— 请勿重复报告同一依赖发现"),
                 "duplicate_of": duplicate_id,
                 "confidence": dedupe.get("confidence", 0.0),
                 "reason": dedupe.get("reason", ""),
@@ -2071,10 +2030,7 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
         logger.exception("create_dependency_report persistence failed")
         return {
             "success": False,
-            "error": (
-                f"Failed to create dependency report: {e!s}. "
-                "The finding was not stored; file it again."
-            ),
+            "error": (f"创建依赖报告失败：{e!s}。该发现未被保存；请重新提交。"),
         }
     else:
         logger.info(
@@ -2086,7 +2042,7 @@ async def _do_create_dependency(  # noqa: PLR0912, PLR0915
         )
         return {
             "success": True,
-            "message": f"Dependency finding '{title}' created successfully",
+            "message": f"依赖发现 '{title}' 创建成功",
             "report_id": report_id,
             "severity": severity,
             "cve": parsed_cve,
@@ -2416,7 +2372,7 @@ async def _run_report_reader(fn: Any, *args: Any, **kwargs: Any) -> dict[str, An
         return await asyncio.to_thread(fn, *args, **kwargs)
     except (ImportError, AttributeError) as e:
         logger.exception("report reader failed")
-        return {"success": False, "error": f"Failed to read reports: {e!s}"}
+        return {"success": False, "error": f"读取报告失败：{e!s}"}
 
 
 def _do_list_reports(
@@ -2431,17 +2387,15 @@ def _do_list_reports(
     errors: list[str] = []
     severity = (clean_optional(severity) or "").lower() or None
     if severity and severity not in _VALID_SEVERITIES:
-        errors.append(
-            f"Invalid severity: {severity!r}. Must be one of: {sorted(_VALID_SEVERITIES)}"
-        )
+        errors.append(f"无效的 severity：{severity!r}。必须是以下之一：{sorted(_VALID_SEVERITIES)}")
     finding_class = (clean_optional(finding_class) or "").lower() or None
     if finding_class and finding_class not in _VALID_FINDING_CLASSES:
         errors.append(
-            f"Invalid finding_class: {finding_class!r}. "
-            f"Must be one of: {sorted(_VALID_FINDING_CLASSES)}"
+            f"无效的 finding_class：{finding_class!r}。"
+            f"必须是以下之一：{sorted(_VALID_FINDING_CLASSES)}"
         )
     if errors:
-        return {"success": False, "error": "Validation failed", "errors": errors}
+        return {"success": False, "error": "校验失败", "errors": errors}
 
     from strix.report.state import get_global_report_state
 
@@ -2453,7 +2407,7 @@ def _do_list_reports(
             "filtered_count": 0,
             "total_count": 0,
             "severity_counts": {},
-            "warning": "Report state unavailable - no reports have been filed yet",
+            "warning": "报告状态不可用 - 尚未提交任何报告",
         }
 
     all_reports = report_state.get_existing_vulnerabilities()
@@ -2488,7 +2442,7 @@ def _do_list_reports(
 def _do_get_report(report_id: str, caller_agent_id: str | None = None) -> dict[str, Any]:
     report_id = (report_id or "").strip()
     if not report_id:
-        return {"success": False, "error": "report_id cannot be empty", "report": None}
+        return {"success": False, "error": "report_id 不能为空", "report": None}
 
     from strix.report.state import get_global_report_state
 
@@ -2496,7 +2450,7 @@ def _do_get_report(report_id: str, caller_agent_id: str | None = None) -> dict[s
     if report_state is None:
         return {
             "success": False,
-            "error": "Report state unavailable - no reports have been filed yet",
+            "error": "报告状态不可用 - 尚未提交任何报告",
             "report": None,
         }
 
@@ -2508,7 +2462,7 @@ def _do_get_report(report_id: str, caller_agent_id: str | None = None) -> dict[s
             }
     return {
         "success": False,
-        "error": f"Report with id '{report_id}' not found",
+        "error": f"未找到 id 为 '{report_id}' 的报告",
         "report": None,
     }
 

@@ -64,19 +64,19 @@ func resultMapOf(result any) (map[string]any, bool) {
 
 func renderListRequests(args map[string]any, result any, status string) string {
 	var b strings.Builder
-	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" listing requests"))
+	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" 正在列出请求"))
 	if f := StringValue(args["httpql_filter"]); f != "" {
-		b.WriteString(Dim().Italic(true).Render("  where " + ptrunc(f, 150)))
+		b.WriteString(Dim().Italic(true).Render("  筛选条件 " + ptrunc(f, 150)))
 	}
 	var meta []string
 	if s := StringValue(args["sort_by"]); s != "" && s != "timestamp" {
-		meta = append(meta, "by:"+s)
+		meta = append(meta, "排序:"+s)
 	}
 	if s := StringValue(args["sort_order"]); s != "" && s != "desc" {
 		meta = append(meta, s)
 	}
 	if s := StringValue(args["scope_id"]); s != "" {
-		meta = append(meta, "scope:"+truncStr(s, 8))
+		meta = append(meta, "范围:"+truncStr(s, 8))
 	}
 	if len(meta) > 0 {
 		b.WriteString(Dim().Render("  (" + strings.Join(meta, ", ") + ")"))
@@ -84,14 +84,14 @@ func renderListRequests(args map[string]any, result any, status string) string {
 	if status == "completed" {
 		if m, ok := resultMapOf(result); ok {
 			if e, has := m["error"]; has {
-				b.WriteString(Col(Red).Render("  error: " + psanitize(StringValue(e), 150)))
+				b.WriteString(Col(Red).Render("  错误: " + psanitize(StringValue(e), 150)))
 			} else {
 				entries, _ := m["entries"].([]any)
 				suffix := ""
 				if pi, ok := m["page_info"].(map[string]any); ok && truthy(pi["has_next_page"]) {
 					suffix = "+"
 				}
-				b.WriteString(Dim().Render(fmt.Sprintf("  [%d%s found]", len(entries), suffix)))
+				b.WriteString(Dim().Render(fmt.Sprintf("  [找到 %d 条%s]", len(entries), suffix)))
 				renderRequestEntries(&b, entries)
 			}
 		}
@@ -134,8 +134,14 @@ func renderRequestEntries(b *strings.Builder, entries []any) {
 		}
 	}
 	if len(entries) > 20 {
-		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  ... +%d more", len(entries)-20)))
+		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  … 另有 %d 条", len(entries)-20)))
 	}
+}
+
+// proxyPartLabels localizes the fixed parts a request can be read in; any other
+// value is shown as-is.
+var proxyPartLabels = map[string]string{
+	"request": "请求", "response": "响应", "headers": "请求头", "body": "正文",
 }
 
 func renderViewRequest(args map[string]any, result any, status string) string {
@@ -145,10 +151,13 @@ func renderViewRequest(args map[string]any, result any, status string) string {
 	if part == "" {
 		part = "request"
 	}
-	action := "viewing"
+	if label, ok := proxyPartLabels[part]; ok {
+		part = label
+	}
+	action := "正在查看"
 	search := StringValue(args["search_pattern"])
 	if search != "" {
-		action = "searching"
+		action = "正在搜索"
 	}
 	b.WriteString(Col(Cyan).Render(" " + action + " " + part))
 	if rid := StringValue(args["request_id"]); rid != "" {
@@ -160,13 +169,13 @@ func renderViewRequest(args map[string]any, result any, status string) string {
 	if status == "completed" {
 		if m, ok := resultMapOf(result); ok {
 			if e, has := m["error"]; has {
-				b.WriteString(Col(Red).Render("  error: " + psanitize(StringValue(e), 150)))
+				b.WriteString(Col(Red).Render("  错误: " + psanitize(StringValue(e), 150)))
 			} else if hits, has := m["hits"].([]any); has {
 				total := len(hits)
 				if t, ok := NumericValue(m["total_hits"]); ok {
 					total = int(t)
 				}
-				b.WriteString(Dim().Render(fmt.Sprintf("  [%d matches]", total)))
+				b.WriteString(Dim().Render(fmt.Sprintf("  [%d 处匹配]", total)))
 				renderSearchHits(&b, hits)
 			} else if content, has := m["content"]; has {
 				page := 1
@@ -177,7 +186,7 @@ func renderViewRequest(args map[string]any, result any, status string) string {
 				if t, ok := NumericValue(m["total_lines"]); ok {
 					tl = int(t)
 				}
-				b.WriteString(Dim().Render(fmt.Sprintf("  [page %d, %d lines]", page, tl)))
+				b.WriteString(Dim().Render(fmt.Sprintf("  [第 %d 页，%d 行]", page, tl)))
 				renderContentLines(&b, StringValue(content), truthy(m["has_more"]))
 			}
 		}
@@ -214,7 +223,7 @@ func renderSearchHits(b *strings.Builder, hits []any) {
 		}
 	}
 	if len(hits) > 5 {
-		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  ... +%d more matches", len(hits)-5)))
+		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  … 另有 %d 处匹配", len(hits)-5)))
 	}
 }
 
@@ -235,18 +244,18 @@ func renderContentLines(b *strings.Builder, content string, hasMore bool) {
 		}
 	}
 	if hasMore || len(allLines) > 15 {
-		b.WriteString("\n" + Dim().Italic(true).Render("  ... more content available"))
+		b.WriteString("\n" + Dim().Italic(true).Render("  … 还有更多内容"))
 	}
 }
 
 func renderRepeatRequest(args map[string]any, result any, status string) string {
 	var b strings.Builder
-	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" repeating request"))
+	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" 正在重放请求"))
 	if rid := StringValue(args["request_id"]); rid != "" {
 		b.WriteString(Dim().Render(" #" + rid))
 	}
 	if mods, ok := args["modifications"].(map[string]any); ok {
-		b.WriteString(Dim().Italic(true).Render("\n  modifications:"))
+		b.WriteString(Dim().Italic(true).Render("\n  修改:"))
 		arrow := Col(Blue).Render("  >> ")
 		if url, ok := mods["url"]; ok {
 			b.WriteString("\n" + arrow + Dim().Render("url: "+ptrunc(StringValue(url), 180)))
@@ -290,14 +299,14 @@ func renderRepeatRequest(args map[string]any, result any, status string) string 
 		if m, ok := resultMapOf(result); ok {
 			success, hasSuccess := m["success"].(bool)
 			if hasSuccess && !success && StringValue(m["error"]) != "" {
-				b.WriteString(Col(Red).Render("\n  error: " + psanitize(StringValue(m["error"]), 150)))
+				b.WriteString(Col(Red).Render("\n  错误: " + psanitize(StringValue(m["error"]), 150)))
 			} else {
 				resp, _ := m["response"].(map[string]any)
 				b.WriteString("\n" + Col(Green).Render("  << "))
 				if code, ok := NumericValue(resp["status_code"]); ok && code != 0 {
 					b.WriteString(proxyStatusStyle(int(code)).Render(fmt.Sprintf("%d", int(code))))
 				} else {
-					b.WriteString(Dim().Render("(no response)"))
+					b.WriteString(Dim().Render("(无响应)"))
 				}
 				if ms, ok := NumericValue(m["elapsed_ms"]); ok && ms != 0 {
 					b.WriteString(Dim().Render(fmt.Sprintf(" (%dms)", int(ms))))
@@ -324,13 +333,13 @@ func renderRepeatRequest(args map[string]any, result any, status string) string 
 
 func renderListSitemap(args map[string]any, result any, status string) string {
 	var b strings.Builder
-	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" listing sitemap"))
+	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" 正在列出站点地图"))
 	if pid := StringValue(args["parent_id"]); pid != "" {
-		b.WriteString(Dim().Render("  under #" + ptrunc(pid, 20)))
+		b.WriteString(Dim().Render("  位于 #" + ptrunc(pid, 20)))
 	}
 	var meta []string
 	if s := StringValue(args["scope_id"]); s != "" {
-		meta = append(meta, "scope:"+truncStr(s, 8))
+		meta = append(meta, "范围:"+truncStr(s, 8))
 	}
 	if d := StringValue(args["depth"]); d != "" && d != "DIRECT" {
 		meta = append(meta, strings.ToLower(d))
@@ -341,14 +350,14 @@ func renderListSitemap(args map[string]any, result any, status string) string {
 	if status == "completed" {
 		if m, ok := resultMapOf(result); ok {
 			if e, has := m["error"]; has {
-				b.WriteString(Col(Red).Render("  error: " + psanitize(StringValue(e), 150)))
+				b.WriteString(Col(Red).Render("  错误: " + psanitize(StringValue(e), 150)))
 			} else {
 				total := 0
 				if t, ok := NumericValue(m["total_count"]); ok {
 					total = int(t)
 				}
 				entries, _ := m["entries"].([]any)
-				b.WriteString(Dim().Render(fmt.Sprintf("  [%d entries]", total)))
+				b.WriteString(Dim().Render(fmt.Sprintf("  [%d 个条目]", total)))
 				renderSitemapEntries(&b, entries)
 			}
 		}
@@ -408,20 +417,20 @@ func renderSitemapEntries(b *strings.Builder, entries []any) {
 		}
 	}
 	if len(entries) > 20 {
-		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  ... +%d more", len(entries)-20)))
+		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  … 另有 %d 个条目", len(entries)-20)))
 	}
 }
 
 func renderViewSitemapEntry(args map[string]any, result any, status string) string {
 	var b strings.Builder
-	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" viewing sitemap"))
+	b.WriteString(Dim().Render(proxyIcon) + Col(Cyan).Render(" 正在查看站点地图"))
 	if eid := StringValue(args["entry_id"]); eid != "" {
 		b.WriteString(Dim().Render(" #" + ptrunc(eid, 20)))
 	}
 	if status == "completed" {
 		if m, ok := resultMapOf(result); ok {
 			if e, has := m["error"]; has {
-				b.WriteString(Col(Red).Render("  error: " + psanitize(StringValue(e), 150)))
+				b.WriteString(Col(Red).Render("  错误: " + psanitize(StringValue(e), 150)))
 			} else if entry, ok := m["entry"].(map[string]any); ok {
 				kind, label := StringValue(entry["kind"]), StringValue(entry["label"])
 				related, _ := entry["related_requests"].(map[string]any)
@@ -433,7 +442,7 @@ func renderViewSitemapEntry(args map[string]any, result any, status string) stri
 					total = int(t)
 				}
 				if total != 0 {
-					b.WriteString(Dim().Render(fmt.Sprintf("  [%d requests]", total)))
+					b.WriteString(Dim().Render(fmt.Sprintf("  [%d 个请求]", total)))
 				}
 				reqs, _ := related["requests"].([]any)
 				renderRelatedRequests(&b, reqs)
@@ -474,12 +483,12 @@ func renderRelatedRequests(b *strings.Builder, reqs []any) {
 		}
 	}
 	if len(reqs) > 10 {
-		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  ... +%d more", len(reqs)-10)))
+		b.WriteString("\n" + Dim().Italic(true).Render(fmt.Sprintf("  … 另有 %d 个请求", len(reqs)-10)))
 	}
 }
 
 var scopeActionMap = map[string]string{
-	"get": "getting", "list": "listing", "create": "creating", "update": "updating", "delete": "deleting",
+	"get": "获取", "list": "列出", "create": "创建", "update": "更新", "delete": "删除",
 }
 
 func renderScopeRules(args map[string]any, result any, status string) string {
@@ -489,12 +498,14 @@ func renderScopeRules(args map[string]any, result any, status string) string {
 	actionText, ok := scopeActionMap[action]
 	if !ok {
 		if action != "" {
-			actionText = action + "ing"
+			actionText = action + " 代理范围"
 		} else {
-			actionText = "managing"
+			actionText = "管理代理范围"
 		}
+	} else {
+		actionText += "代理范围"
 	}
-	b.WriteString(Col(Cyan).Render(" " + actionText + " proxy scope"))
+	b.WriteString(Col(Cyan).Render(" " + actionText))
 	if sn := StringValue(args["scope_name"]); sn != "" {
 		b.WriteString(Dim().Italic(true).Render(" '" + ptrunc(sn, 50) + "'"))
 	}
@@ -517,24 +528,24 @@ func renderScopeRules(args map[string]any, result any, status string) string {
 			}
 		}
 	}
-	writeList("allowlist", "allow")
-	writeList("denylist", "deny")
+	writeList("allowlist", "允许")
+	writeList("denylist", "拒绝")
 	if status == "completed" {
 		if m, ok := resultMapOf(result); ok {
 			switch {
 			case m["error"] != nil:
-				b.WriteString(Col(Red).Render("  error: " + psanitize(StringValue(m["error"]), 150)))
+				b.WriteString(Col(Red).Render("  错误: " + psanitize(StringValue(m["error"]), 150)))
 			case m["scopes"] != nil:
 				scopes, _ := m["scopes"].([]any)
-				b.WriteString(Dim().Render(fmt.Sprintf("  [%d scopes]", len(scopes))))
+				b.WriteString(Dim().Render(fmt.Sprintf("  [%d 个范围]", len(scopes))))
 				renderScopeList(&b, scopes)
 			case m["scope"] != nil:
 				if scope, ok := m["scope"].(map[string]any); ok {
 					if allow, ok := scope["allowlist"].([]any); ok && len(allow) > 0 {
-						b.WriteString("\n  " + Dim().Render("allow: "+joinTrunc(allow, 40, 5)))
+						b.WriteString("\n  " + Dim().Render("允许: "+joinTrunc(allow, 40, 5)))
 					}
 					if deny, ok := scope["denylist"].([]any); ok && len(deny) > 0 {
-						b.WriteString("\n  " + Dim().Render("deny: "+joinTrunc(deny, 40, 5)))
+						b.WriteString("\n  " + Dim().Render("拒绝: "+joinTrunc(deny, 40, 5)))
 					}
 				}
 			case m["message"] != nil:

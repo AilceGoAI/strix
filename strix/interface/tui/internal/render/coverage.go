@@ -19,11 +19,11 @@ var coverageOutcomes = map[string]struct {
 	label  string
 	color  lipgloss.Color
 }{
-	"reported":        {"!", "reported", SevHigh},
-	"no_issue_found":  {"✓", "no issue found", Green},
-	"ruled_out":       {"✓", "ruled out", Mint},
-	"not_applicable":  {"–", "not applicable", Slate},
-	"needs_follow_up": {"?", "needs follow-up", AmberY},
+	"reported":        {"!", "已报告", SevHigh},
+	"no_issue_found":  {"✓", "未发现问题", Green},
+	"ruled_out":       {"✓", "已排除", Mint},
+	"not_applicable":  {"–", "不适用", Slate},
+	"needs_follow_up": {"?", "需跟进", AmberY},
 }
 
 func coverageOutcome(outcome string) (string, string, lipgloss.Color) {
@@ -41,9 +41,9 @@ var coverageTitles = map[string]struct {
 	loading string
 	errMsg  string
 }{
-	"record_coverage": {"Coverage Recorded", "Recording...", "Failed to record coverage"},
-	"update_coverage": {"Coverage Updated", "Updating...", "Failed to update coverage"},
-	"list_coverage":   {"Coverage", "Loading...", "Unable to list coverage"},
+	"record_coverage": {"覆盖已记录", "正在记录…", "记录覆盖失败"},
+	"update_coverage": {"覆盖已更新", "正在更新…", "更新覆盖失败"},
+	"list_coverage":   {"覆盖", "正在加载…", "无法列出覆盖"},
 }
 
 func renderCoverage(name string, args map[string]any, result any) string {
@@ -108,9 +108,9 @@ func coverageSubject(args map[string]any, result map[string]any) string {
 		return risk
 	}
 	if id := StringValue(result["entry_id"]); id != "" {
-		return Dim().Render("entry " + id)
+		return Dim().Render("条目 " + id)
 	}
-	return Dim().Render("(unnamed surface)")
+	return Dim().Render("（未命名表面）")
 }
 
 func coverageEvidence(b *strings.Builder, evidence string) {
@@ -133,9 +133,9 @@ func coverageListBody(b *strings.Builder, result map[string]any) {
 	total, _ := NumericValue(result["total_count"])
 	if len(entries) == 0 {
 		if int(total) == 0 {
-			b.WriteString("\n  " + Dim().Render("No surfaces recorded yet"))
+			b.WriteString("\n  " + Dim().Render("尚未记录任何表面"))
 		} else {
-			b.WriteString("\n  " + Dim().Render("No surfaces match this filter"))
+			b.WriteString("\n  " + Dim().Render("没有符合此筛选条件的表面"))
 		}
 		return
 	}
@@ -150,7 +150,7 @@ func coverageListBody(b *strings.Builder, result map[string]any) {
 				continue
 			}
 			_, label, color := coverageOutcome(outcome)
-			parts = append(parts, Col(color).Render(label+": "+strconv.Itoa(int(count))))
+			parts = append(parts, Col(color).Render(label+"："+strconv.Itoa(int(count))))
 		}
 		if len(parts) > 0 {
 			b.WriteString("\n  " + strings.Join(parts, Dim().Render("  ")))
@@ -162,7 +162,7 @@ func coverageListBody(b *strings.Builder, result map[string]any) {
 		marker, label, color := coverageOutcome(StringValue(entry["outcome"]))
 		surface := strings.TrimSpace(StringValue(entry["surface"]))
 		if surface == "" {
-			surface = "(unnamed surface)"
+			surface = "（未命名表面）"
 		}
 		b.WriteString("\n  " + Col(color).Render(marker) + " " + surface)
 		if risk := strings.TrimSpace(StringValue(entry["risk_area"])); risk != "" {
@@ -179,13 +179,13 @@ func coverageListBody(b *strings.Builder, result map[string]any) {
 				}
 			}
 			if len(was) > 0 {
-				b.WriteString(Dim().Render(" (was " + strings.Join(was, " → ") + ")"))
+				b.WriteString(Dim().Render("（原为 " + strings.Join(was, " → ") + "）"))
 			}
 		}
 		// Whose row this is matters for reconciliation: an agent needs to see
 		// at a glance which surfaces it owns and which came from a sibling.
 		if truthy(entry["by_you"]) {
-			b.WriteString(Dim().Render(" · you"))
+			b.WriteString(Dim().Render(" · 你"))
 		} else if who := strings.TrimSpace(StringValue(entry["agent_name"])); who != "" {
 			b.WriteString(Dim().Render(" · " + who))
 		}

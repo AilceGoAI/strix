@@ -230,7 +230,7 @@ def _resolve_api_spec(target: str, details: dict[str, Any]) -> None:
             extra_variables = None
         base_urls = spec_base_urls(raw, extra_variables=extra_variables)
     except SpecParseError as exc:
-        raise ValueError(f"Invalid API spec '{target}': {exc}") from None
+        raise ValueError(f"无效的 API 规范 '{target}'：{exc}") from None
 
     details["spec_title"] = spec_title(raw)
     details["base_urls"] = base_urls

@@ -84,7 +84,7 @@ export interface LoadedRun {
 
 async function getJson(path: string): Promise<unknown> {
   const res = await fetch(path, { cache: "no-store" });
-  if (!res.ok) throw new Error(`${path} responded ${res.status}`);
+  if (!res.ok) throw new Error(`${path} 返回了 ${res.status}`);
   return res.json();
 }
 

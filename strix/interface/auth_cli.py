@@ -38,7 +38,7 @@ _CALLBACK_TIMEOUT_S = 300
 LOGIN_PROVIDER = "chatgpt"
 _ACCEPTED_PROVIDERS = frozenset({LOGIN_PROVIDER, codex.PROVIDER})
 
-_USAGE = "Usage:\n  strix auth login chatgpt [--manual]\n  strix auth status\n  strix auth logout"
+_USAGE = "用法：\n  strix auth login chatgpt [--manual]\n  strix auth status\n  strix auth logout"
 
 
 def run_auth(argv: list[str]) -> int:
@@ -61,7 +61,7 @@ def run_auth(argv: list[str]) -> int:
     if handler is not None:
         return handler()
 
-    console.print(f"[red]Unknown auth command:[/] {subcommand}\n")
+    console.print(f"[red]未知的 auth 命令：[/] {subcommand}\n")
     console.print(_USAGE)
     return 2
 
@@ -72,12 +72,12 @@ def _login(console: Console, argv: list[str]) -> int:
         "provider",
         nargs="?",
         default=LOGIN_PROVIDER,
-        help="Model provider to sign in with (default: chatgpt).",
+        help="用于登录的模型提供商（默认：chatgpt）。",
     )
     parser.add_argument(
         "--manual",
         action="store_true",
-        help="Skip the local callback server and paste the redirect URL by hand.",
+        help="跳过本地回调服务器，手动粘贴重定向 URL。",
     )
     try:
         args = parser.parse_args(argv)
@@ -86,8 +86,8 @@ def _login(console: Console, argv: list[str]) -> int:
 
     if args.provider.lower() not in _ACCEPTED_PROVIDERS:
         console.print(
-            f"[red]Unsupported provider:[/] {args.provider}. "
-            f"Only '{LOGIN_PROVIDER}' (ChatGPT subscription) is supported."
+            f"[red]不支持的提供商：[/] {args.provider}。"
+            f"仅支持 '{LOGIN_PROVIDER}'（ChatGPT 订阅）。"
         )
         return 2
 
@@ -96,9 +96,9 @@ def _login(console: Console, argv: list[str]) -> int:
     authorize_url = codex.build_authorize_url(challenge, state)
 
     console.print()
-    console.print("[bold]Signing in with ChatGPT[/] [dim](provider: chatgpt)[/]")
+    console.print("[bold]正在使用 ChatGPT 登录[/] [dim](provider: chatgpt)[/]")
     console.print(
-        "[dim]This uses your ChatGPT Plus/Pro plan for inference instead of a metered API key.[/]"
+        "[dim]推理将使用你的 ChatGPT Plus/Pro 套餐，而不是按量计费的 API key。[/]"
     )
     console.print()
 
@@ -107,7 +107,7 @@ def _login(console: Console, argv: list[str]) -> int:
     except codex.CodexAuthError as exc:
         return _fail(console, exc)
     except KeyboardInterrupt:
-        console.print("\n[yellow]Sign-in cancelled.[/]")
+        console.print("\n[yellow]已取消登录。[/]")
         return 130
 
     codex.save_record(record)
@@ -126,7 +126,7 @@ def _run_oauth_flow(
     """Drive the browser (or manual) OAuth flow and return a token record."""
     server = None if manual else _try_start_callback_server()
 
-    console.print("Open this URL in your browser to authorize:")
+    console.print("在浏览器中打开以下 URL 以完成授权：")
     console.print(f"[cyan]{authorize_url}[/]")
     console.print()
     if not manual:
@@ -136,7 +136,7 @@ def _run_oauth_flow(
             logger.debug("could not open browser", exc_info=True)
 
     if server is not None:
-        console.print("[dim]Waiting for you to finish signing in…[/]")
+        console.print("[dim]等待你完成登录……[/]")
         result = server.wait(_CALLBACK_TIMEOUT_S)
         server.shutdown()
         if result is not None:
@@ -144,16 +144,16 @@ def _run_oauth_flow(
             if error:
                 raise codex.CodexAuthError("oauth_error", error)
             return _finish(code, returned_state, verifier, state, require_state=True)
-        console.print("[yellow]Timed out waiting for the browser. Falling back to manual paste.[/]")
+        console.print("[yellow]等待浏览器超时，改为手动粘贴。[/]")
 
     # Manual fallback: the user completes sign-in and pastes the redirect URL
     # (the browser lands on a localhost page that won't load if no server is up;
     # the address bar still holds the code+state).
     console.print()
     try:
-        pasted = console.input("Paste the full redirect URL (or code#state): ").strip()
+        pasted = console.input("粘贴完整重定向 URL（或 code#state）：").strip()
     except EOFError as exc:
-        raise codex.CodexAuthError("no_input", "no redirect URL provided") from exc
+        raise codex.CodexAuthError("no_input", "未提供重定向 URL") from exc
     code, returned_state = codex.parse_redirect_input(pasted)
     return _finish(code, returned_state, verifier, state, require_state=False)
 
@@ -167,15 +167,15 @@ def _finish(
     require_state: bool,
 ) -> dict[str, Any]:
     if not code:
-        raise codex.CodexAuthError("no_code", "no authorization code found in the redirect")
+        raise codex.CodexAuthError("no_code", "重定向中未找到授权码")
     # The loopback callback from OpenAI always carries state, so a missing or
     # mismatched value there is forged (CSRF) and must be rejected. Manual paste
     # is user-initiated (the user copies their own redirect), so state is only
     # validated when the pasted value includes it.
     if require_state and returned_state is None:
-        raise codex.CodexAuthError("state_mismatch", "missing state in callback; possible CSRF")
+        raise codex.CodexAuthError("state_mismatch", "回调中缺少 state，可能存在 CSRF")
     if returned_state is not None and returned_state != expected_state:
-        raise codex.CodexAuthError("state_mismatch", "state did not match; possible CSRF")
+        raise codex.CodexAuthError("state_mismatch", "state 不匹配，可能存在 CSRF")
     return codex.exchange_code(code, verifier)
 
 
@@ -245,30 +245,30 @@ def _first(query: dict[str, list[str]], key: str) -> str | None:
 def _status(console: Console) -> int:
     record = codex.read_record()
     if record is None:
-        console.print("[yellow]Not signed in.[/] Run [cyan]strix auth login chatgpt[/] to sign in.")
+        console.print("[yellow]尚未登录。[/] 运行 [cyan]strix auth login chatgpt[/] 登录。")
         return 1
     settings = load_settings()
-    console.print("[green]Signed in[/] with a ChatGPT subscription.")
-    console.print(f"  Account: [bold]{record.get('account_id')}[/]")
+    console.print("[green]已登录[/]，使用 ChatGPT 订阅。")
+    console.print(f"  账号：[bold]{record.get('account_id')}[/]")
     if codex.subscription_model(settings.llm.model):
-        console.print(f"  Runs use the subscription (STRIX_LLM=[bold]{settings.llm.model}[/]).")
+        console.print(f"  运行使用订阅（STRIX_LLM=[bold]{settings.llm.model}[/]）。")
     else:
         console.print(
-            "  [yellow]Note:[/] set [cyan]STRIX_LLM[/] to e.g. [cyan]chatgpt/gpt-5.4[/] "
-            "to run on the subscription."
+            "  [yellow]注意：[/] 将 [cyan]STRIX_LLM[/] 设置为例如 [cyan]chatgpt/gpt-5.4[/] "
+            "即可使用订阅运行。"
         )
     return 0
 
 
 def _logout(console: Console) -> int:
     codex.logout()
-    console.print("[green]Signed out.[/] Stored subscription credentials removed.")
+    console.print("[green]已登出。[/] 已删除保存的订阅凭据。")
     return 0
 
 
 def _fail(console: Console, exc: codex.CodexAuthError) -> int:
     error_text = Text()
-    error_text.append("SIGN-IN FAILED", style="bold red")
+    error_text.append("登录失败", style="bold red")
     error_text.append("\n\n", style="white")
     error_text.append(f"{exc}", style="white")
     console.print()
@@ -286,17 +286,17 @@ def _fail(console: Console, exc: codex.CodexAuthError) -> int:
 
 def _print_success(console: Console) -> None:
     text = Text()
-    text.append("Signed in with your ChatGPT subscription", style="bold #22c55e")
+    text.append("已使用你的 ChatGPT 订阅登录", style="bold #22c55e")
     text.append("\n\n", style="white")
-    text.append("Set ", style="white")
+    text.append("将 ", style="white")
     text.append("STRIX_LLM", style="bold white")
-    text.append(" to a ", style="white")
+    text.append(" 设置为 ", style="white")
     text.append("chatgpt/", style="bold cyan")
-    text.append(" model (e.g. ", style="white")
+    text.append(" 模型（例如 ", style="white")
     text.append("chatgpt/gpt-5.4", style="bold cyan")
-    text.append(") — runs are billed to your ChatGPT plan.", style="white")
+    text.append("）——运行会计入你的 ChatGPT 套餐。", style="white")
     text.append("\n\n", style="white")
-    text.append("Run a scan as usual, e.g. ", style="white")
+    text.append("照常运行扫描，例如 ", style="white")
     text.append("strix --target https://example.com", style="bold cyan")
     console.print()
     console.print(
@@ -334,9 +334,9 @@ def _render_callback_html() -> str:
 
 
 _CALLBACK_HTML = """<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Strix — signed in</title>
+<title>Strix — 已登录</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -396,23 +396,22 @@ _CALLBACK_HTML = """<!doctype html>
     <span>Strix</span>
   </a>
   <div class="brand">Strix</div>
-  <h1>You're signed in</h1>
+  <h1>登录成功</h1>
   <main class="card">
     <div class="badge">✓</div>
-    <p class="msg">Strix is connected to your ChatGPT subscription. Head back to your
-      terminal — your security test runs there.</p>
+    <p class="msg">Strix 已连接到你的 ChatGPT 订阅。请回到终端——
+      你的安全测试在那里运行。</p>
     <div class="rule"></div>
-    <p class="tagline">Autonomous AI hackers that <b>find and fix</b> your app's
-      vulnerabilities.</p>
+    <p class="tagline">自主式 AI 黑客，<b>发现并修复</b>你应用中的漏洞。</p>
     <nav class="links">
       <a href="https://strix.ai" target="_blank" rel="noopener">strix.ai</a>
       <span class="dot">·</span>
       <a href="https://docs.strix.ai" target="_blank" rel="noopener">docs</a>
       <span class="dot">·</span>
-      <a href="https://discord.gg/strix-ai" target="_blank" rel="noopener">community</a>
+      <a href="https://discord.gg/strix-ai" target="_blank" rel="noopener">社区</a>
     </nav>
   </main>
-  <p class="close">You can close this tab.</p>
+  <p class="close">你可以关闭此标签页。</p>
 </body></html>"""
 
 

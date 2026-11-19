@@ -33,7 +33,7 @@ async def run_tui(args: argparse.Namespace) -> None:
         await run_go_tui(args)
     except GoTuiPreActivationError as exc:
         raise InteractiveSetupUnavailableError(
-            f"The interactive interface could not start: {exc}"
+            f"交互界面无法启动：{exc}"
         ) from exc
     except TuiProcessExitedError as exc:
         raise InteractiveInterfaceExitedError(str(exc)) from exc

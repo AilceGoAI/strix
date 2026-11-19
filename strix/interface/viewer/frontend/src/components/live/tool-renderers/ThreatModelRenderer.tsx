@@ -11,13 +11,13 @@ interface Amendment {
 }
 
 const ACTION_LABELS: Record<string, { label: string; Icon: typeof Crosshair }> = {
-  get_threat_model: { label: "Threat model", Icon: Crosshair },
-  save_threat_model: { label: "Threat model saved", Icon: Save },
-  amend_threat_model: { label: "Threat model amended", Icon: Plus },
+  get_threat_model: { label: "威胁模型", Icon: Crosshair },
+  save_threat_model: { label: "威胁模型已保存", Icon: Save },
+  amend_threat_model: { label: "威胁模型已修订", Icon: Plus },
 };
 
 export default function ThreatModelRenderer({ toolName, args, result }: ToolRendererProps) {
-  const action = ACTION_LABELS[toolName] ?? { label: "Threat model", Icon: Crosshair };
+  const action = ACTION_LABELS[toolName] ?? { label: "威胁模型", Icon: Crosshair };
   const ActionIcon = action.Icon;
   const target = (args.target as string) ?? "";
   const res = result as Record<string, unknown> | string | null;
@@ -41,7 +41,7 @@ export default function ThreatModelRenderer({ toolName, args, result }: ToolRend
       <div>
         {header}
         <div className="mt-1.5 text-red-400/70 text-[13px]">
-          {(structured.error as string) ?? "Threat model call failed"}
+          {(structured.error as string) ?? "威胁模型调用失败"}
         </div>
       </div>
     );
@@ -52,7 +52,7 @@ export default function ThreatModelRenderer({ toolName, args, result }: ToolRend
       return (
         <div>
           {header}
-          <div className="mt-1.5 text-[#555] text-xs">No model derived for this target yet</div>
+          <div className="mt-1.5 text-[#555] text-xs">尚未为该目标推导出威胁模型</div>
         </div>
       );
     }
@@ -64,15 +64,15 @@ export default function ThreatModelRenderer({ toolName, args, result }: ToolRend
         {amendments.length > 0 && (
           <div className="mt-2">
             <span className="text-amber-400/70 text-xs font-semibold">
-              {amendments.length} amendment{amendments.length === 1 ? "" : "s"}
+              {amendments.length} 条修订
             </span>
-            <span className="text-[#555] text-xs"> — later statements win</span>
+            <span className="text-[#555] text-xs">（后写入的修订优先）</span>
             <div className="mt-1 space-y-1">
               {/* On a public share link the amendment body is stripped, so the
                   author line has to stand on its own. */}
               {amendments.map((amendment, i) => (
                 <div key={i} className="text-xs leading-snug">
-                  <span className="text-[#666]">{amendment.agent_name ?? "unknown agent"}</span>
+                  <span className="text-[#666]">{amendment.agent_name ?? "未知智能体"}</span>
                   {amendment.content && (
                     <span className="text-[#999]">: {amendment.content}</span>
                   )}
@@ -97,7 +97,7 @@ export default function ThreatModelRenderer({ toolName, args, result }: ToolRend
       <div>
         {header}
         {count != null && (
-          <div className="mt-1.5 text-[#666] text-xs">{count} amendment{count === 1 ? "" : "s"} on this model</div>
+          <div className="mt-1.5 text-[#666] text-xs">{count} 条修订（本模型）</div>
         )}
         {addendum && <div className="mt-1.5"><TruncatedText text={addendum} maxLines={10} /></div>}
       </div>
@@ -113,7 +113,7 @@ export default function ThreatModelRenderer({ toolName, args, result }: ToolRend
       {cleared > 0 && (
         <div className="mt-1.5 flex items-center gap-1.5 text-yellow-400/80 text-xs">
           <AlertTriangle className="w-3 h-3 shrink-0" />
-          <span>cleared {cleared} amendment{cleared === 1 ? "" : "s"}</span>
+          <span>已清除 {cleared} 条修订</span>
         </div>
       )}
       {content && <div className="mt-2"><TruncatedText text={content} maxLines={14} /></div>}

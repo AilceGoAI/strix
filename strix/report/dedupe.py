@@ -249,14 +249,14 @@ def _check_dependency_duplicate(
                     "is_duplicate": True,
                     "duplicate_id": str(report.get("id") or "")[:64],
                     "confidence": 1.0,
-                    "reason": "Same dependency CVE/package identity",
+                    "reason": "依赖 CVE/包标识相同",
                 }
             if not report_ecosystem or not ecosystem:
                 return {
                     "is_duplicate": True,
                     "duplicate_id": str(report.get("id") or "")[:64],
                     "confidence": 1.0,
-                    "reason": "Same dependency CVE/package identity with missing ecosystem",
+                    "reason": "依赖 CVE/包标识相同，但生态系统字段缺失",
                 }
             continue
 
@@ -272,7 +272,7 @@ def _check_dependency_duplicate(
                 "is_duplicate": True,
                 "duplicate_id": str(report.get("id") or "")[:64],
                 "confidence": 1.0,
-                "reason": "Same dependency CVE/package identity in legacy report",
+                "reason": "旧版报告中的依赖 CVE/包标识相同",
             }
 
     if found_legacy_same_cve:
@@ -283,7 +283,7 @@ def _check_dependency_duplicate(
         "is_duplicate": False,
         "duplicate_id": "",
         "confidence": 1.0,
-        "reason": f"No existing dependency report for {cve} in {package_label}",
+        "reason": f"{package_label} 中不存在针对 {cve} 的依赖报告",
     }
 
 
@@ -297,15 +297,15 @@ def _parse_dedupe_response(content: str) -> dict[str, Any]:
     start = text.find("{")
     end = text.rfind("}")
     if start == -1 or end == -1 or end <= start:
-        raise ValueError(f"No JSON object found in dedupe response: {content[:500]}")
+        raise ValueError(f"去重响应中未找到 JSON 对象：{content[:500]}")
     parsed = json.loads(text[start : end + 1])
 
     is_duplicate = parsed.get("is_duplicate")
     if not isinstance(is_duplicate, bool):
-        raise TypeError("is_duplicate must be a boolean")
+        raise TypeError("is_duplicate 必须是布尔值")
     duplicate_id = parsed.get("duplicate_id") or ""
     if is_duplicate and (not isinstance(duplicate_id, str) or not duplicate_id):
-        raise ValueError("A duplicate decision must name an existing report ID")
+        raise ValueError("重复判定必须指明一个已存在的报告 ID")
     # Keep the ID verbatim: truncating or stripping it could turn an unknown ID
     # into a different, existing one before the membership check below.
     duplicate_id = str(duplicate_id)
@@ -329,7 +329,7 @@ def _validate_duplicate_reference(
     if result["is_duplicate"] and not any(
         report.get("id") == result["duplicate_id"] for report in existing_reports
     ):
-        raise ValueError("Duplicate decision refers to an unknown report ID")
+        raise ValueError("重复判定引用了未知的报告 ID")
 
 
 def _extract_text(response: ModelResponse) -> str:
@@ -352,7 +352,7 @@ async def check_duplicate(
             "is_duplicate": False,
             "duplicate_id": "",
             "confidence": 1.0,
-            "reason": "No existing reports to compare against",
+            "reason": "没有可对照的已有报告",
         }
 
     dependency_duplicate = _check_dependency_duplicate(candidate, existing_reports)
@@ -368,7 +368,7 @@ async def check_duplicate(
                 "is_duplicate": False,
                 "duplicate_id": "",
                 "confidence": 0.0,
-                "reason": "No LLM model configured; skipping dedupe check",
+                "reason": "未配置 LLM 模型；跳过去重检查",
             }
 
         candidate_cleaned = _prepare_report_for_comparison(candidate)
@@ -410,7 +410,7 @@ async def check_duplicate(
                 "is_duplicate": False,
                 "duplicate_id": "",
                 "confidence": 0.0,
-                "reason": "Empty response from LLM",
+                "reason": "LLM 返回为空",
             }
 
         result = _parse_dedupe_response(content)
@@ -429,7 +429,7 @@ async def check_duplicate(
             "is_duplicate": False,
             "duplicate_id": "",
             "confidence": 0.0,
-            "reason": f"Deduplication check failed: {e}",
+            "reason": f"去重检查失败：{e}",
             "error": str(e),
         }
     else:

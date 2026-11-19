@@ -37,13 +37,13 @@ export default function ViewImageRenderer({ args, result }: ToolRendererProps) {
   return (
     <div>
       <div className="flex items-baseline gap-2">
-        <span className="text-sky-400/80 font-semibold text-sm shrink-0">view image</span>
+        <span className="text-sky-400/80 font-semibold text-sm shrink-0">查看图片</span>
         {path && <span className="text-[#888] font-mono text-[13px] break-all">{shortPath(path)}</span>}
       </div>
       {imgSrc && (
         <img
           src={imgSrc}
-          alt={path || "Tool image output"}
+          alt={path || "工具图片输出"}
           className="mt-1.5 max-w-full max-h-96 rounded-lg border border-white/[0.06] object-contain"
         />
       )}

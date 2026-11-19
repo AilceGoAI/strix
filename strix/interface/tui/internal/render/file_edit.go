@@ -81,12 +81,12 @@ func parsePatchOperations(patch string) []patchOp {
 	return ops
 }
 
-var opLabel = map[string]string{"add": "create", "update": "edit", "delete": "delete"}
+var opLabel = map[string]string{"add": "创建", "update": "编辑", "delete": "删除"}
 
 func renderPatchOperation(b *strings.Builder, op patchOp) {
 	label := opLabel[op.kind]
 	if label == "" {
-		label = "file"
+		label = "文件"
 	}
 	b.WriteString(Col(Emerald).Render("◇ ") + Dim().Render(label))
 	if op.path != "" {
@@ -120,11 +120,11 @@ func renderApplyPatch(args map[string]any, result any, status string) string {
 	ops := parsePatchOperations(extractPatchText(args))
 	var b strings.Builder
 	if len(ops) == 0 {
-		b.WriteString(Col(Emerald).Render("◇ ") + Dim().Render("patch"))
+		b.WriteString(Col(Emerald).Render("◇ ") + Dim().Render("补丁"))
 		if s, ok := result.(string); ok && strings.TrimSpace(s) != "" {
 			b.WriteString("\n  " + Dim().Render(strings.TrimSpace(s)))
 		} else if result == nil {
-			b.WriteString(" " + Dim().Render("Processing..."))
+			b.WriteString(" " + Dim().Render("正在处理…"))
 		}
 		return b.String()
 	}

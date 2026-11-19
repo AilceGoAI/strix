@@ -29,42 +29,42 @@ export interface StatusMeta {
 
 export const STATUS_META: Record<VulnerabilityStatus, StatusMeta> = {
   open: {
-    label: "Open",
+    label: "待处理",
     color: "bg-red-500/10 text-red-400 border-red-500/20",
     dotColor: "bg-red-500",
-    description: "Newly discovered, awaiting triage",
+    description: "新发现，等待分类处理",
   },
   in_progress: {
-    label: "In Progress",
+    label: "处理中",
     color: "bg-blue-500/10 text-blue-400 border-blue-500/20",
     dotColor: "bg-blue-500",
-    description: "Someone is working on this",
+    description: "有人正在处理",
   },
   snoozed: {
-    label: "Snoozed",
+    label: "已暂停",
     color: "bg-purple-500/10 text-purple-400 border-purple-500/20",
     dotColor: "bg-purple-500",
-    description: "Temporarily hidden until a follow-up date",
+    description: "临时隐藏，直到跟进日期",
   },
   fixed: {
-    label: "Fixed",
+    label: "已修复",
     color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
     dotColor: "bg-emerald-500",
-    description: "This vulnerability has been fixed",
+    description: "此漏洞已修复",
   },
   ignored: {
-    label: "Ignored",
+    label: "已忽略",
     color: "bg-gray-500/10 text-gray-400 border-gray-500/20",
     dotColor: "bg-gray-500",
-    description: "Acknowledged but accepted",
+    description: "已确认但接受",
   },
 };
 
 export const FIX_EFFORT_META: Record<FixEffort, { label: string; color: string }> = {
-  trivial: { label: "Trivial", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  low: { label: "Low", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  medium: { label: "Medium", color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
-  high: { label: "High", color: "bg-orange-500/10 text-orange-400 border-orange-500/20" },
+  trivial: { label: "极小", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+  low: { label: "低", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+  medium: { label: "中", color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20" },
+  high: { label: "高", color: "bg-orange-500/10 text-orange-400 border-orange-500/20" },
 };
 
 export interface CodeLocation {
@@ -190,8 +190,8 @@ export function isSeverityOverridden(
 
 export function formatCvssLabel(cvss: number | null): string {
   if (cvss === null) return "N/A";
-  if (cvss >= 9.0) return "Critical";
-  if (cvss >= 7.0) return "High";
-  if (cvss >= 4.0) return "Medium";
-  return "Low";
+  if (cvss >= 9.0) return "严重";
+  if (cvss >= 7.0) return "高";
+  if (cvss >= 4.0) return "中";
+  return "低";
 }

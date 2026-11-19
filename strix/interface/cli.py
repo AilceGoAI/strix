@@ -33,7 +33,7 @@ def _resolve_sandbox_image() -> str:
     image = load_settings().runtime.image
     if not image:
         raise RuntimeError(
-            "strix_image is not configured. Set it in ~/.strix/cli-config.json.",
+            "strix_image 未配置。请在 ~/.strix/cli-config.json 中设置。",
         )
     return image
 
@@ -42,27 +42,27 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
     console = Console()
 
     start_text = Text()
-    start_text.append("Penetration test initiated", style="bold #22c55e")
+    start_text.append("渗透测试已启动", style="bold #22c55e")
 
     target_text = Text()
-    target_text.append("Target", style="dim")
+    target_text.append("目标", style="dim")
     target_text.append("  ")
     if len(args.targets_info) == 1:
         target_text.append(args.targets_info[0]["original"], style="bold white")
     else:
-        target_text.append(f"{len(args.targets_info)} targets", style="bold white")
+        target_text.append(f"{len(args.targets_info)} 个目标", style="bold white")
         for target_info in args.targets_info:
             target_text.append("\n        ")
             target_text.append(target_info["original"], style="white")
 
     results_text = Text()
-    results_text.append("Output", style="dim")
+    results_text.append("输出", style="dim")
     results_text.append("  ")
     results_text.append(f"strix_runs/{args.run_name}", style="#60a5fa")
 
     note_text = Text()
     note_text.append("\n\n", style="dim")
-    note_text.append("Vulnerabilities will be displayed in real-time.", style="dim")
+    note_text.append("漏洞将实时显示。", style="dim")
 
     startup_panel = Panel(
         Text.assemble(
@@ -112,7 +112,7 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
 
         vuln_text = format_vulnerability_report(report)
 
-        suffix = " (updated)" if updated else ""
+        suffix = "（已更新）" if updated else ""
         vuln_panel = Panel(
             vuln_text,
             title=f"[bold red]{report_id.upper()}{suffix}",
@@ -130,14 +130,14 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
         deletion = deletion if isinstance(deletion, dict) else {}
         deleted_by = deletion.get("agent_name") or deletion.get("agent_id") or "agent"
         text = Text()
-        text.append("Withdrawn: ", style="bold")
+        text.append("已撤回：", style="bold")
         text.append(f"{report.get('title', '')}\n\n")
-        text.append(f"Deleted by {deleted_by}. ", style="dim")
+        text.append(f"由 {deleted_by} 删除。", style="dim")
         text.append(str(deletion.get("reason") or ""))
         console.print(
             Panel(
                 text,
-                title=f"[bold yellow]{report_id.upper()} (withdrawn)",
+                title=f"[bold yellow]{report_id.upper()}（已撤回）",
                 title_align="left",
                 border_style="yellow",
                 padding=(1, 2),
@@ -166,15 +166,15 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
 
     set_global_report_state(report_state)
 
-    startup_phase: list[str] = ["Starting up"]
+    startup_phase: list[str] = ["正在启动"]
 
     def create_live_status() -> Panel:
         status_text = Text()
-        status_text.append("Penetration test in progress", style="bold #22c55e")
+        status_text.append("渗透测试进行中", style="bold #22c55e")
         status_text.append("\n\n")
 
         if not has_model_response(report_state):
-            status_text.append(f"{startup_phase[0]}...", style="dim")
+            status_text.append(f"{startup_phase[0]}……", style="dim")
             status_text.append("\n\n")
 
         stats_text = build_live_stats_text(report_state)
@@ -236,14 +236,14 @@ async def run_cli(args: Any) -> None:  # noqa: PLR0915
                     await session_manager.cleanup(args.run_name)
 
     except Exception as e:
-        console.print(f"[bold red]Error during penetration test:[/] {e}")
+        console.print(f"[bold red]渗透测试过程中出错：[/] {e}")
         raise
 
     if report_state.final_scan_result:
         console.print()
 
         final_report_text = Text()
-        final_report_text.append("Penetration test summary", style="bold #60a5fa")
+        final_report_text.append("渗透测试摘要", style="bold #60a5fa")
 
         final_report_panel = Panel(
             Text.assemble(

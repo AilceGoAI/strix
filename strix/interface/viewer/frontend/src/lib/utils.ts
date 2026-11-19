@@ -84,19 +84,19 @@ export function formatTimeAgo(dateString: string): string {
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
-    return "just now";
+    return "刚刚";
   }
   if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60);
-    return `${minutes}m ago`;
+    return `${minutes} 分钟前`;
   }
   if (diffInSeconds < 86400) {
     const hours = Math.floor(diffInSeconds / 3600);
-    return `${hours}h ago`;
+    return `${hours} 小时前`;
   }
   if (diffInSeconds < 604800) {
     const days = Math.floor(diffInSeconds / 86400);
-    return `${days}d ago`;
+    return `${days} 天前`;
   }
   return formatDate(dateString);
 }
@@ -106,19 +106,19 @@ export function formatTimeUntil(dateString: string): string {
   const now = new Date();
   const diffInSeconds = Math.floor((date.getTime() - now.getTime()) / 1000);
 
-  if (diffInSeconds < 0) return "now";
-  if (diffInSeconds < 60) return "in <1m";
+  if (diffInSeconds < 0) return "现在";
+  if (diffInSeconds < 60) return "不到 1 分钟后";
   if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60);
-    return `in ${minutes}m`;
+    return `${minutes} 分钟后`;
   }
   if (diffInSeconds < 86400) {
     const hours = Math.floor(diffInSeconds / 3600);
-    return `in ${hours}h`;
+    return `${hours} 小时后`;
   }
   if (diffInSeconds < 604800) {
     const days = Math.round(diffInSeconds / 86400);
-    return `in ${days || 1}d`;
+    return `${days || 1} 天后`;
   }
   return formatDate(dateString);
 }

@@ -49,9 +49,8 @@ class ReportRollbackError(RuntimeError):
         self.report_id = report_id
         self.cause = cause
         super().__init__(
-            f"Deletion of report '{report_id}' failed ({cause}) and the on-disk indexes "
-            "could not be restored; the report is still on file and the indexes are "
-            "rewritten on the next save"
+            f"删除报告 '{report_id}' 失败（{cause}），磁盘上的索引无法恢复；"
+            "报告仍在档案中，索引将在下次保存时重写"
         )
 
 
@@ -298,13 +297,13 @@ class ReportState:
                 data = json.loads(json_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:
                 raise RuntimeError(
-                    f"vulnerabilities.json at {json_path} is corrupt ({exc}); "
-                    f"refusing to start fresh — that would overwrite prior "
-                    f"vulnerability MDs on disk. Inspect or delete the run dir.",
+                    f"{json_path} 处的 vulnerabilities.json 已损坏（{exc}）；"
+                    f"拒绝从头开始 —— 那会覆盖磁盘上已有的漏洞 MD 文件。"
+                    f"请检查或删除该运行目录。",
                 ) from exc
             if not isinstance(data, list):
                 raise RuntimeError(
-                    f"vulnerabilities.json at {json_path} is not a list",
+                    f"{json_path} 处的 vulnerabilities.json 不是列表",
                 )
             self.vulnerability_reports = [r for r in data if isinstance(r, dict)]
             for r in self.vulnerability_reports:
@@ -810,19 +809,19 @@ class ReportState:
         self.save_run_data(status=status)
 
     def _format_final_scan_result(self, scan_results: dict[str, Any]) -> str:
-        return f"""# Executive Summary
+        return f"""# 执行摘要
 
 {str(scan_results.get("executive_summary", "")).strip()}
 
-# Methodology
+# 方法论
 
 {str(scan_results.get("methodology", "")).strip()}
 
-# Technical Analysis
+# 技术分析
 
 {str(scan_results.get("technical_analysis", "")).strip()}
 
-# Recommendations
+# 建议
 
 {str(scan_results.get("recommendations", "")).strip()}
 """

@@ -44,11 +44,11 @@ def terminal_projection(  # noqa: PLR0911
         if len(clean) <= max_string:
             return clean
         omitted = len(clean) - max_string
-        return f"{clean[:max_string]}\n...[{omitted} characters omitted from terminal projection]"
+        return f"{clean[:max_string]}\n...[{omitted} 个字符已从终端投影中省略]"
     if value is None or isinstance(value, bool | int | float):
         return value
     if depth >= 8:
-        return "[nested value omitted from terminal projection]"
+        return "[嵌套值已从终端投影中省略]"
     if isinstance(value, dict):
         items = list(value.items())
         projected = {
@@ -62,7 +62,7 @@ def terminal_projection(  # noqa: PLR0911
         }
         if len(items) > max_items:
             projected["_projection_notice"] = (
-                f"{len(items) - max_items} fields omitted from terminal projection"
+                f"{len(items) - max_items} 个字段已从终端投影中省略"
             )
         return projected
     if isinstance(value, list | tuple):
@@ -77,7 +77,7 @@ def terminal_projection(  # noqa: PLR0911
         ]
         if len(value) > max_items:
             projected_items.append(
-                f"[{len(value) - max_items} items omitted from terminal projection]"
+                f"[{len(value) - max_items} 项已从终端投影中省略]"
             )
         return projected_items
     return terminal_projection(

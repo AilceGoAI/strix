@@ -18,7 +18,7 @@ func renderNote(name string, args map[string]any, result any) string {
 			category = "general"
 		}
 		title, content := strings.TrimSpace(StringValue(args["title"])), strings.TrimSpace(StringValue(args["content"]))
-		b.WriteString(icon + Dim().Render("note") + " " + Dim().Render("("+category+")"))
+		b.WriteString(icon + Dim().Render("笔记") + " " + Dim().Render("("+category+")"))
 		if title != "" {
 			b.WriteString("\n  " + title)
 		}
@@ -26,13 +26,13 @@ func renderNote(name string, args map[string]any, result any) string {
 			b.WriteString("\n  " + Dim().Render(content))
 		}
 		if title == "" && content == "" {
-			b.WriteString("\n  " + Dim().Render("Capturing..."))
+			b.WriteString("\n  " + Dim().Render("正在记录…"))
 		}
 	case "delete_note":
-		b.WriteString(icon + Dim().Render("note removed"))
+		b.WriteString(icon + Dim().Render("笔记已删除"))
 	case "update_note":
 		title, content := StringValue(args["title"]), strings.TrimSpace(StringValue(args["content"]))
-		b.WriteString(icon + Dim().Render("note updated"))
+		b.WriteString(icon + Dim().Render("笔记已更新"))
 		if title != "" {
 			b.WriteString("\n  " + title)
 		}
@@ -40,18 +40,18 @@ func renderNote(name string, args map[string]any, result any) string {
 			b.WriteString("\n  " + Dim().Render(content))
 		}
 		if title == "" && content == "" {
-			b.WriteString("\n  " + Dim().Render("Updating..."))
+			b.WriteString("\n  " + Dim().Render("正在更新…"))
 		}
 	case "list_notes":
-		b.WriteString(icon + Dim().Render("notes"))
+		b.WriteString(icon + Dim().Render("笔记"))
 		b.WriteString(noteListBody(result))
 	case "get_note":
-		b.WriteString(icon + Dim().Render("note read"))
+		b.WriteString(icon + Dim().Render("已读取笔记"))
 		if m, ok := result.(map[string]any); ok && truthy(m["success"]) {
 			note, _ := m["note"].(map[string]any)
 			renderSingleNote(&b, note)
 		} else {
-			b.WriteString("\n  " + Dim().Render("Loading..."))
+			b.WriteString("\n  " + Dim().Render("加载中…"))
 		}
 	default:
 		b.WriteString(icon + Dim().Render(strings.ReplaceAll(name, "_", " ")))
@@ -66,18 +66,18 @@ func noteListBody(result any) string {
 	}
 	m, ok := result.(map[string]any)
 	if !ok || !truthy(m["success"]) {
-		return "\n  " + Dim().Render("Loading...")
+		return "\n  " + Dim().Render("加载中…")
 	}
 	notes, _ := m["notes"].([]any)
 	count, _ := NumericValue(m["total_count"])
 	if int(count) == 0 || len(notes) == 0 {
-		return "\n  " + Dim().Render("No notes")
+		return "\n  " + Dim().Render("暂无笔记")
 	}
 	for _, n := range notes {
 		note, _ := n.(map[string]any)
 		title := strings.TrimSpace(StringValue(note["title"]))
 		if title == "" {
-			title = "(untitled)"
+			title = "(无标题)"
 		}
 		category := StringValue(note["category"])
 		if category == "" {
@@ -98,7 +98,7 @@ func noteListBody(result any) string {
 func renderSingleNote(b *strings.Builder, note map[string]any) {
 	title := strings.TrimSpace(StringValue(note["title"]))
 	if title == "" {
-		title = "(untitled)"
+		title = "(无标题)"
 	}
 	category := StringValue(note["category"])
 	if category == "" {

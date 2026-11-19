@@ -123,9 +123,9 @@ def read_run_record(run_dir: Path) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"run.json at {path} is unreadable: {exc}") from exc
+        raise RuntimeError(f"{path} 处的 run.json 无法读取：{exc}") from exc
     if not isinstance(data, dict):
-        raise TypeError(f"run.json at {path} is not an object")
+        raise TypeError(f"{path} 处的 run.json 不是对象")
     return data
 
 
@@ -139,8 +139,8 @@ def write_run_record(run_dir: Path, run_record: dict[str, Any]) -> None:
 def write_executive_report(run_dir: Path, final_scan_result: str) -> None:
     path = run_dir / "penetration_test_report.md"
     with path.open("w", encoding="utf-8") as f:
-        f.write("# Security Penetration Test Report\n\n")
-        f.write(f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n")
+        f.write("# 安全渗透测试报告\n\n")
+        f.write(f"**生成时间:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n")
         f.write(f"{final_scan_result}\n")
     logger.info("Saved final penetration test report to: %s", path)
 
@@ -222,23 +222,23 @@ def atomic_write_text(path: Path, payload: str) -> None:
 
 def render_vulnerability_md(report: dict[str, Any]) -> str:  # noqa: PLR0912, PLR0915
     lines: list[str] = [
-        f"# {report.get('title', 'Untitled Vulnerability')}\n",
-        f"**ID:** {report.get('id', 'unknown')}",
-        f"**Severity:** {report.get('severity', 'unknown').upper()}",
-        f"**Found:** {report.get('timestamp', 'unknown')}",
+        f"# {report.get('title', '未命名漏洞')}\n",
+        f"**ID:** {report.get('id', '未知')}",
+        f"**严重程度:** {report.get('severity', '未知').upper()}",
+        f"**发现时间:** {report.get('timestamp', '未知')}",
     ]
 
     dep_meta = report.get("dependency_metadata") or {}
     metadata: list[tuple[str, Any]] = [
-        ("Target", report.get("target")),
-        ("Package", dep_meta.get("package_name")),
-        ("Ecosystem", dep_meta.get("package_ecosystem")),
-        ("Installed Version", dep_meta.get("installed_version")),
-        ("Fixed Version", dep_meta.get("fixed_version")),
-        ("Introduced By", dep_meta.get("introduced_by")),
-        ("Dependency Chain", dep_meta.get("dependency_path")),
-        ("Endpoint", report.get("endpoint")),
-        ("Method", report.get("method")),
+        ("目标", report.get("target")),
+        ("包", dep_meta.get("package_name")),
+        ("生态系统", dep_meta.get("package_ecosystem")),
+        ("已安装版本", dep_meta.get("installed_version")),
+        ("修复版本", dep_meta.get("fixed_version")),
+        ("引入来源", dep_meta.get("introduced_by")),
+        ("依赖链", dep_meta.get("dependency_path")),
+        ("端点", report.get("endpoint")),
+        ("方法", report.get("method")),
         ("CVE", report.get("cve")),
         ("CWE", report.get("cwe")),
     ]
@@ -247,59 +247,59 @@ def render_vulnerability_md(report: dict[str, Any]) -> str:  # noqa: PLR0912, PL
         metadata.append(("CVSS", cvss))
     advisory_cvss = dep_meta.get("advisory_cvss")
     if advisory_cvss is not None and advisory_cvss != cvss:
-        metadata.append(("Advisory CVSS", advisory_cvss))
+        metadata.append(("公告 CVSS", advisory_cvss))
     if dep_meta.get("contextual_cvss_vector"):
-        metadata.append(("Contextual CVSS Vector", dep_meta["contextual_cvss_vector"]))
+        metadata.append(("上下文 CVSS 向量", dep_meta["contextual_cvss_vector"]))
     if report.get("confidence"):
-        metadata.append(("Confidence", str(report["confidence"]).title()))
+        metadata.append(("置信度", str(report["confidence"]).title()))
     if report.get("fix_effort"):
-        metadata.append(("Fix Effort", str(report["fix_effort"]).title()))
+        metadata.append(("修复工作量", str(report["fix_effort"]).title()))
     for label, value in metadata:
         if value:
             lines.append(f"**{label}:** {value}")
 
     lines.append("")
-    lines.append("## Description\n")
-    lines.append(report.get("description") or "No description provided.")
+    lines.append("## 描述\n")
+    lines.append(report.get("description") or "未提供描述。")
     lines.append("")
 
     if report.get("evidence"):
-        lines.append("## Evidence\n")
+        lines.append("## 证据\n")
         lines.append(str(report["evidence"]))
         lines.append("")
 
     if report.get("impact"):
-        lines.append("## Impact\n")
+        lines.append("## 影响\n")
         lines.append(str(report["impact"]))
         lines.append("")
 
     if report.get("counterevidence"):
-        lines.append("## Counterevidence\n")
+        lines.append("## 反向证据\n")
         lines.append(str(report["counterevidence"]))
         lines.append("")
 
     if report.get("confidence_rationale"):
-        lines.append("## Confidence Rationale\n")
+        lines.append("## 置信度依据\n")
         lines.append(str(report["confidence_rationale"]))
         lines.append("")
 
     if report.get("severity_change_conditions"):
-        lines.append("## What Would Change This Severity\n")
+        lines.append("## 会改变严重程度的条件\n")
         lines.append(str(report["severity_change_conditions"]))
         lines.append("")
 
     if report.get("technical_analysis"):
-        lines.append("## Technical Analysis\n")
+        lines.append("## 技术分析\n")
         lines.append(str(report["technical_analysis"]))
         lines.append("")
 
     if dep_meta.get("contextual_cvss_reasoning"):
-        lines.append("## Contextual CVSS\n")
+        lines.append("## 上下文 CVSS\n")
         lines.append(str(dep_meta["contextual_cvss_reasoning"]))
         lines.append("")
 
     if report.get("poc_description") or report.get("poc_script_code"):
-        lines.append("## Proof of Concept\n")
+        lines.append("## 概念验证\n")
         if report.get("poc_description"):
             lines.append(str(report["poc_description"]))
             lines.append("")
@@ -313,16 +313,16 @@ def render_vulnerability_md(report: dict[str, Any]) -> str:  # noqa: PLR0912, PL
             lines.append("")
 
     if report.get("code_locations"):
-        lines.append("## Code Analysis\n")
+        lines.append("## 代码分析\n")
         for i, loc in enumerate(report["code_locations"]):
-            file_ref = loc.get("file", "unknown")
+            file_ref = loc.get("file", "未知")
             line_ref = ""
             if loc.get("start_line") is not None:
                 if loc.get("end_line") and loc["end_line"] != loc["start_line"]:
-                    line_ref = f" (lines {loc['start_line']}-{loc['end_line']})"
+                    line_ref = f"（第 {loc['start_line']}-{loc['end_line']} 行）"
                 else:
-                    line_ref = f" (line {loc['start_line']})"
-            lines.append(f"**Location {i + 1}:** `{file_ref}`{line_ref}")
+                    line_ref = f"（第 {loc['start_line']} 行）"
+            lines.append(f"**位置 {i + 1}:** `{file_ref}`{line_ref}")
             if loc.get("label"):
                 lines.append(f"  {loc['label']}")
             if loc.get("snippet"):
@@ -332,7 +332,7 @@ def render_vulnerability_md(report: dict[str, Any]) -> str:  # noqa: PLR0912, PL
                 lines.extend(f"  {ln}" for ln in snippet.splitlines())
                 lines.append(f"  {fence}")
             if loc.get("fix_before") or loc.get("fix_after"):
-                lines.append("\n  **Suggested Fix:**")
+                lines.append("\n  **建议修复:**")
                 lines.append("```diff")
                 if loc.get("fix_before"):
                     lines.extend(f"- {ln}" for ln in str(loc["fix_before"]).splitlines())
@@ -342,17 +342,17 @@ def render_vulnerability_md(report: dict[str, Any]) -> str:  # noqa: PLR0912, PL
             lines.append("")
 
     if report.get("remediation_steps"):
-        lines.append("## Remediation\n")
+        lines.append("## 修复建议\n")
         lines.append(str(report["remediation_steps"]))
         lines.append("")
 
     if report.get("fix_verification"):
-        lines.append("## Fix Verification\n")
+        lines.append("## 修复验证\n")
         lines.append(str(report["fix_verification"]))
         lines.append("")
 
     if report.get("assumptions"):
-        lines.append("## Assumptions\n")
+        lines.append("## 前提假设\n")
         lines.append(str(report["assumptions"]))
         lines.append("")
 
@@ -371,26 +371,26 @@ def render_update_history(history: Any) -> list[str]:
     if not entries:
         return []
 
-    lines = ["## Update History\n"]
+    lines = ["## 更新历史\n"]
     for entry in entries:
-        author = str(entry.get("agent_name") or entry.get("agent_id") or "an agent")
+        author = str(entry.get("agent_name") or entry.get("agent_id") or "某个智能体")
         raw_fields = entry.get("fields")
         fields: list[Any] = raw_fields if isinstance(raw_fields, list) else []
         changed = ", ".join(str(field) for field in fields)
-        timestamp = str(entry.get("timestamp") or "unknown")
-        lines.append(f"**{timestamp}** — {author} updated: {changed}")
+        timestamp = str(entry.get("timestamp") or "未知")
+        lines.append(f"**{timestamp}** — {author} 更新了：{changed}")
         raw_dropped = entry.get("dropped_fields")
         if isinstance(raw_dropped, list) and raw_dropped:
             dropped = ", ".join(str(field) for field in raw_dropped)
-            lines.append(f"  Dropped as superseded: {dropped}")
+            lines.append(f"  因被取代而丢弃：{dropped}")
         for key, label in (
-            ("previous_severity", "severity"),
+            ("previous_severity", "严重程度"),
             ("previous_cvss", "CVSS"),
-            ("previous_confidence", "confidence"),
+            ("previous_confidence", "置信度"),
         ):
             if entry.get(key) is not None:
-                lines.append(f"  Previous {label}: {entry[key]}")
+                lines.append(f"  原{label}：{entry[key]}")
         if entry.get("reason"):
-            lines.append(f"  Reason: {entry['reason']}")
+            lines.append(f"  原因：{entry['reason']}")
         lines.append("")
     return lines

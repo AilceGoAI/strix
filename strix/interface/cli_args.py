@@ -65,59 +65,59 @@ def _positive_int(value: str) -> int:
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Strix Multi-Agent Cybersecurity Penetration Testing Tool",
+        description="Strix 多智能体网络安全渗透测试工具",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  # Web application penetration test
+示例：
+  # Web 应用渗透测试
   strix --target https://example.com
 
-  # GitHub repository analysis
+  # GitHub 仓库分析
   strix --target https://github.com/user/repo
   strix --target git@github.com:user/repo.git
 
-  # Local code analysis
+  # 本地代码分析
   strix --target ./my-project
 
-  # API spec test (OpenAPI/Swagger file or Postman collection export)
+  # API 规范测试（OpenAPI/Swagger 文件或 Postman collection 导出）
   strix --target ./openapi.yaml --target https://api.example.com
   strix --target ./collection.postman_collection.json
 
-  # Postman collection pulled live by id (needs POSTMAN_API_KEY); optional environment
+  # 按 id 实时拉取 Postman collection（需要 POSTMAN_API_KEY）；可选环境
   strix --target postman://<collection-uuid> --target https://api.example.com
   strix --target "postman://<collection-uuid>?env=<environment-uuid>"
 
-  # Domain penetration test
+  # 域名渗透测试
   strix --target example.com
 
-  # IP address penetration test
+  # IP 地址渗透测试
   strix --target 192.168.1.42
 
-  # Multiple targets (e.g., white-box testing with source and deployed app)
+  # 多目标（例如：源码与已部署应用一起做白盒测试）
   strix --target https://github.com/user/repo --target https://example.com
   strix --target ./my-project --target https://staging.example.com --target https://prod.example.com
 
-  # Targets from a file, one target per non-empty, non-comment line
+  # 从文件读取目标，每个非空、非注释行一个目标
   strix --target-list ./targets.txt
 
-  # Custom instructions (inline)
+  # 自定义指令（内联）
   strix --target example.com --instruction "Focus on authentication vulnerabilities"
 
-  # Custom instructions (from file)
+  # 自定义指令（从文件读取）
   strix --target example.com --instruction-file ./instructions.txt
   strix --target https://app.com --instruction-file /path/to/detailed_instructions.md
 
-  # Extra files placed in the sandbox workspace
+  # 放入沙箱工作区的额外文件
   strix --target ./my-project --workspace-file ./wordlist.txt
   strix --target https://app.com --workspace-file ./openapi.yaml:specs/openapi.yaml
 
 Strix Cloud:
   strix cloud login
   strix cloud scans start --source . --yes --wait
-  strix cloud                      # list every cloud resource
+  strix cloud                      # 列出全部云资源
 
-  Run a pentest in Strix Cloud     https://app.strix.ai
-  Try Strix Enterprise             https://strix.ai/demo
+  在 Strix Cloud 中运行渗透测试     https://app.strix.ai
+  试用 Strix Enterprise             https://strix.ai/demo
         """,
     )
 
@@ -131,9 +131,8 @@ Strix Cloud:
     parser.add_argument(
         "--update",
         action="store_true",
-        help="Update strix to the latest version and exit. Self-updates the "
-        "standalone binary install; for pip/pipx/uv installs, prints the "
-        "matching upgrade command instead.",
+        help="将 strix 更新到最新版本后退出。独立二进制安装会自更新；"
+        "pip/pipx/uv 安装则打印对应的升级命令。",
     )
 
     parser.add_argument(
@@ -141,47 +140,47 @@ Strix Cloud:
         "--target",
         type=str,
         action="append",
-        help="Target to test: URL, repository, local directory path, domain name, IP address, "
-        "an API spec file (OpenAPI/Swagger .json/.yaml or a Postman collection export), or a "
-        "Postman collection by id (postman://<collection-uuid>[?env=<environment-uuid>], needs "
-        "POSTMAN_API_KEY). Local directories are mounted into the sandbox writable. "
-        "Can be specified multiple times for multi-target scans. "
-        "Fresh runs require --target or --target-list.",
+        help="要测试的目标：URL、仓库、本地目录路径、域名、IP 地址、"
+        "API 规范文件（OpenAPI/Swagger .json/.yaml 或 Postman collection 导出），或按 id 指定 "
+        "Postman collection（postman://<collection-uuid>[?env=<environment-uuid>]，需要 "
+        "POSTMAN_API_KEY）。本地目录会以可写方式挂载到沙箱中。"
+        "可重复指定以进行多目标扫描。"
+        "全新运行需要 --target 或 --target-list。",
     )
     parser.add_argument(
         "--target-list",
         type=str,
         action="append",
         metavar="PATH",
-        help="Path to a file containing targets, one per non-empty, non-comment line. "
-        "Can be specified multiple times and combined with --target.",
+        help="包含目标的文件路径，每个非空、非注释行一个目标。"
+        "可重复指定，也可与 --target 组合使用。",
     )
     parser.add_argument(
         "--instruction",
         type=str,
-        help="Custom instructions for the penetration test. This can be "
-        "specific vulnerability types to focus on (e.g., 'Focus on IDOR and XSS'), "
-        "testing approaches (e.g., 'Perform thorough authentication testing'), "
-        "test credentials (e.g., 'Use the following credentials to access the app: "
-        "admin:password123'), "
-        "or areas of interest (e.g., 'Check login API endpoint for security issues').",
+        help="渗透测试的自定义指令。可以是重点关注的具体漏洞类型"
+        "（例如 'Focus on IDOR and XSS'）、"
+        "测试方法（例如 'Perform thorough authentication testing'）、"
+        "测试凭据（例如 'Use the following credentials to access the app: "
+        "admin:password123'），"
+        "或关注区域（例如 'Check login API endpoint for security issues'）。",
     )
 
     parser.add_argument(
         "--instruction-file",
         type=str,
-        help="Path to a file containing detailed custom instructions for the penetration test. "
-        "Use this option when you have lengthy or complex instructions saved in a file "
-        "(e.g., '--instruction-file ./detailed_instructions.txt').",
+        help="包含渗透测试详细自定义指令的文件路径。"
+        "当指令较长或较复杂并已保存在文件中时使用此选项"
+        "（例如 '--instruction-file ./detailed_instructions.txt'）。",
     )
 
     parser.add_argument(
         "--skills",
         type=str,
         metavar="NAMES",
-        help="Comma-separated skills to load into the root agent before the scan starts "
-        "(for example '--skills idor,mass_assignment,custom/my_method'). Use the bare name "
-        "or '<category>/<name>'. Unknown names stop the run and list the available skills.",
+        help="扫描开始前加载到根智能体的技能，以逗号分隔"
+        "（例如 '--skills idor,mass_assignment,custom/my_method'）。使用裸名称 "
+        "或 '<category>/<name>'。未知名称会中止运行并列出可用技能。",
     )
 
     parser.add_argument(
@@ -189,19 +188,18 @@ Strix Cloud:
         dest="skills_dir",
         action="append",
         metavar="PATH",
-        help="Directory with extra skills, in the same '<category>/<name>.md' layout as the "
-        "built-in set. Repeat the option for more directories. A skill with the same path as "
-        f"a built-in skill replaces it. Also read from the {SKILLS_DIR_ENV} environment variable.",
+        help="包含额外技能的目录，布局与内置技能集相同，为 '<category>/<name>.md'。"
+        "可重复该选项以添加更多目录。路径与内置技能相同的技能会覆盖内置技能。"
+        f"也会从 {SKILLS_DIR_ENV} 环境变量读取。",
     )
 
     parser.add_argument(
         "--methodology",
         action="append",
         metavar="FILE_OR_SKILL",
-        help="Markdown file or skill name with a testing methodology that applies to the full "
-        "scan (for example '--methodology ./authz-method.md'). Strix puts it in the system "
-        "prompt of the root agent and every agent it creates. Repeat the option for more "
-        "than one.",
+        help="带有测试方法论的 Markdown 文件或技能名称，作用于整个扫描"
+        "（例如 '--methodology ./authz-method.md'）。Strix 会把它放入根智能体及其创建的"
+        "每个智能体的系统提示词中。可重复该选项以指定多个。",
     )
 
     parser.add_argument(
@@ -209,12 +207,11 @@ Strix Cloud:
         type=str,
         action="append",
         metavar="PATH[:DEST]",
-        help="Place a file from this machine into the sandbox workspace before the scan "
-        "starts, for example a wordlist, an API specification, or notes. Repeat the option "
-        "for more files. DEST is the path inside /workspace and defaults to the file name "
-        "(for example '--workspace-file ./wordlist.txt:lists/wordlist.txt'). Strix copies "
-        "the file into the sandbox, outside every target directory. The agent can edit the "
-        "copy. The file on this machine does not change.",
+        help="扫描开始前，把本机上的文件放入沙箱工作区，例如 wordlist、API 规范或笔记。"
+        "可重复该选项以添加更多文件。DEST 是 /workspace 内的路径，默认为文件名"
+        "（例如 '--workspace-file ./wordlist.txt:lists/wordlist.txt'）。Strix 会把文件"
+        "复制到沙箱中，且位于所有目标目录之外。智能体可以编辑该副本。"
+        "本机上的文件不会改变。",
     )
 
     parser.add_argument(
@@ -222,8 +219,8 @@ Strix Cloud:
         "--non-interactive",
         action="store_true",
         help=(
-            "Run in non-interactive mode (no TUI, exits on completion). "
-            "Default is interactive mode with TUI."
+            "以非交互模式运行（不启动 TUI，完成后退出）。"
+            "默认为带 TUI 的交互模式。"
         ),
     )
 
@@ -235,10 +232,10 @@ Strix Cloud:
         default=None,
         metavar="SEVERITY",
         help=(
-            "Headless mode only: exit 2 only when a finding is at or above this severity "
-            "(critical, high, medium, low, info). Lower findings are still written to every "
-            "report artifact. A finding with an unrecognized severity always counts. "
-            "Default: any finding exits 2."
+            "仅无头模式：只有当发现的严重级别达到或高于该值时才以 2 退出"
+            "（critical、high、medium、low、info）。更低的发现仍会写入每个报告产物。"
+            "严重级别无法识别的发现始终计入。"
+            "默认：任何发现都以 2 退出。"
         ),
     )
 
@@ -249,11 +246,11 @@ Strix Cloud:
         choices=["quick", "standard", "deep"],
         default="deep",
         help=(
-            "Scan mode: "
-            "'quick' for fast CI/CD checks, "
-            "'standard' for routine testing, "
-            "'deep' for thorough security reviews (default). "
-            "Default: deep."
+            "扫描模式："
+            "'quick' 用于快速 CI/CD 检查，"
+            "'standard' 用于常规测试，"
+            "'deep' 用于全面的安全审查（默认）。"
+            "默认：deep。"
         ),
     )
 
@@ -263,10 +260,10 @@ Strix Cloud:
         choices=["auto", "diff", "full"],
         default="auto",
         help=(
-            "Scope mode for code targets: "
-            "'auto' enables PR diff-scope in CI/headless runs, "
-            "'diff' forces changed-files scope, "
-            "'full' disables diff-scope."
+            "代码目标的扫描范围模式："
+            "'auto' 在 CI/无头运行中启用 PR diff 范围，"
+            "'diff' 强制只测变更文件，"
+            "'full' 关闭 diff 范围。"
         ),
     )
 
@@ -274,22 +271,22 @@ Strix Cloud:
         "--diff-base",
         type=str,
         help=(
-            "Target branch or commit to compare against (e.g., origin/main). "
-            "Defaults to the repository's default branch."
+            "用于比较的目标分支或提交（例如 origin/main）。"
+            "默认为仓库的默认分支。"
         ),
     )
 
     parser.add_argument(
         "--config",
         type=str,
-        help="Path to a custom config file (JSON) to use instead of ~/.strix/cli-config.json",
+        help="自定义配置文件（JSON）的路径，用于替代 ~/.strix/cli-config.json",
     )
 
     parser.add_argument(
         "--mcp-config",
         type=str,
         metavar="PATH",
-        help="Path to an MCP servers JSON file to use instead of ~/.strix/mcp-servers.json.",
+        help="MCP servers JSON 文件的路径，用于替代 ~/.strix/mcp-servers.json。",
     )
 
     parser.add_argument(
@@ -297,8 +294,8 @@ Strix Cloud:
         dest="mcp_server",
         action="append",
         metavar="NAME",
-        help="Use only this MCP connection for the run, by its config name "
-        "(repeatable). Every other configured connection is skipped.",
+        help="本次运行只使用这个 MCP 连接，按配置中的名称指定"
+        "（可重复）。其他所有已配置的连接都会被跳过。",
     )
 
     parser.add_argument(
@@ -306,7 +303,7 @@ Strix Cloud:
         dest="mcp_exclude",
         action="append",
         metavar="NAME",
-        help="Skip this MCP connection for the run, by its config name (repeatable).",
+        help="本次运行跳过这个 MCP 连接，按配置中的名称指定（可重复）。",
     )
 
     parser.add_argument(
@@ -317,8 +314,8 @@ Strix Cloud:
         type=_positive_budget,
         default=None,
         help=(
-            "Maximum LLM cost in USD (> 0). The scan stops cleanly when this limit is reached. "
-            "Graduated wrap-up warnings are sent to all agents as it is approached."
+            "LLM 费用上限，单位为美元（> 0）。达到该上限时扫描会正常停止。"
+            "接近上限时会向所有智能体发送分级的收尾警告。"
         ),
     )
 
@@ -329,8 +326,8 @@ Strix Cloud:
         type=_positive_int,
         default=DEFAULT_MAX_TURNS,
         help=(
-            "Maximum turns per agent (> 0, default %(default)s). Each agent is force-stopped "
-            "when it reaches this limit, with graduated wrap-up warnings as it is approached."
+            "每个智能体的最大轮次（> 0，默认 %(default)s）。达到该上限时每个智能体都会被"
+            "强制停止；接近上限时会发送分级的收尾警告。"
         ),
     )
 
@@ -342,10 +339,9 @@ Strix Cloud:
         const="",
         metavar="RUN_NAME",
         help=(
-            "Resume a prior scan by its run name (the dir under ./strix_runs/). "
-            "Picks up the root + every non-terminal subagent's full LLM history "
-            "and agent topology. Skips fresh run-name generation. Without a "
-            "name, opens a picker of the prior runs."
+            "按运行名称继续此前的扫描（./strix_runs/ 下的目录）。"
+            "会恢复根智能体以及每个未终止子智能体的完整 LLM 历史与智能体拓扑。"
+            "跳过新运行名的生成。不提供名称时，打开此前运行的选取列表。"
         ),
     )
 

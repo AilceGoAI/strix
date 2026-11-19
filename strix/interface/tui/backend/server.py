@@ -75,7 +75,7 @@ class TuiBackendServer:
     ) -> None:
         """Negotiate protocol v3 before activating command or state traffic."""
         if self._socket is not None:
-            raise RuntimeError("TUI backend is already started")
+            raise RuntimeError("TUI 后端已启动")
         connection.setblocking(False)  # noqa: FBT003
         self._socket = connection
         timeout = _HANDSHAKE_TIMEOUT if handshake_timeout is None else handshake_timeout
@@ -85,7 +85,7 @@ class TuiBackendServer:
         except TimeoutError as exc:
             raise ProtocolHandshakeError("Timed out waiting for TUI protocol ready") from exc
         except (EOFError, ConnectionError, OSError) as exc:
-            raise ProtocolHandshakeError(f"TUI closed during protocol handshake: {exc}") from exc
+            raise ProtocolHandshakeError(f"协议握手期间 TUI 已关闭：{exc}") from exc
         except (TypeError, ValueError, json.JSONDecodeError, UnicodeDecodeError) as exc:
             raise ProtocolHandshakeError(str(exc)) from exc
 
@@ -119,14 +119,14 @@ class TuiBackendServer:
     async def _read_exactly(self, size: int) -> bytes:
         connection = self._socket
         if connection is None:
-            raise ConnectionError("TUI IPC connection is closed")
+            raise ConnectionError("TUI IPC 连接已关闭")
         loop = asyncio.get_running_loop()
         chunks: list[bytes] = []
         remaining = size
         while remaining:
             chunk = await loop.sock_recv(connection, remaining)
             if not chunk:
-                raise EOFError("TUI IPC peer closed")
+                raise EOFError("TUI IPC 对端已关闭")
             chunks.append(chunk)
             remaining -= len(chunk)
         return b"".join(chunks)
@@ -135,24 +135,24 @@ class TuiBackendServer:
         (size,) = _HEADER.unpack(await self._read_exactly(_HEADER.size))
         if size == 0 or size > maximum:
             # Reject the length before allocating or reading its payload.
-            raise ConnectionError(f"invalid TUI IPC frame size: {size}")
+            raise ConnectionError(f"无效的 TUI IPC 帧大小：{size}")
         return await self._read_exactly(size)
 
     async def _receive_ready(self) -> None:
         raw = await self._read_frame(MAX_COMMAND_BYTES)
         message = json.loads(raw.decode("utf-8"))
         if not isinstance(message, dict):
-            raise TypeError("TUI ready message must be an object")
+            raise TypeError("TUI 就绪消息必须是对象")
         if message.get("version") != PROTOCOL_VERSION:
             raise ValueError(
                 f"TUI protocol mismatch: expected v{PROTOCOL_VERSION}, "
                 f"received v{message.get('version')}"
             )
         if message.get("type") != "ready":
-            raise ValueError("TUI protocol handshake expected ready")
+            raise ValueError("TUI 协议握手期望 ready")
         payload = message.get("payload")
         if not isinstance(payload, dict):
-            raise TypeError("TUI ready payload must be an object")
+            raise TypeError("TUI 就绪载荷必须是对象")
         capabilities = payload.get("capabilities")
         if capabilities != list(PROTOCOL_CAPABILITIES):
             raise ValueError("TUI protocol capability mismatch")
@@ -175,18 +175,18 @@ class TuiBackendServer:
     def _decode_message(raw: bytes) -> tuple[str, str, dict[str, object]]:
         message = json.loads(raw.decode("utf-8"))
         if not isinstance(message, dict):
-            raise TypeError("message must be an object")
+            raise TypeError("消息必须是对象")
         request_id = message.get("request_id")
         if not isinstance(request_id, str) or not request_id:
-            raise ValueError("command request_id must be a non-empty string")
+            raise ValueError("命令 request_id 必须是非空字符串")
         if message.get("version") != PROTOCOL_VERSION:
-            raise ValueError(f"unsupported protocol version; expected {PROTOCOL_VERSION}")
+            raise ValueError(f"不支持的协议版本；期望 {PROTOCOL_VERSION}")
         command = message.get("type")
         payload = message.get("payload", {})
         if not isinstance(command, str) or not isinstance(payload, dict):
-            raise TypeError("invalid command envelope")
+            raise TypeError("无效的命令信封")
         if len(command) > 128:
-            raise ValueError("command name exceeds 128 characters")
+            raise ValueError("命令名超过 128 个字符")
         return request_id, command, payload
 
     @staticmethod
@@ -200,7 +200,7 @@ class TuiBackendServer:
         logger.exception("Unhandled TUI command error", exc_info=exc)
         return {
             "code": "internal_error",
-            "message": "The command failed unexpectedly",
+            "message": "命令执行时发生意外失败",
             "retryable": True,
         }
 
@@ -219,7 +219,7 @@ class TuiBackendServer:
                     command = raw_command[:128]
             request_id, command, payload = self._decode_message(raw)
             if request_id in self._seen_request_ids:
-                raise ValueError(f"duplicate request_id: {request_id}")  # noqa: TRY301
+                raise ValueError(f"重复的 request_id：{request_id}")  # noqa: TRY301
             self._seen_request_ids.add(request_id)
             self._request_id_order.append(request_id)
             if len(self._request_id_order) > 10_000:
@@ -228,7 +228,7 @@ class TuiBackendServer:
                 collection = payload.get("collection")
                 if not isinstance(collection, str) or collection not in _COLLECTIONS:
                     choices = ", ".join(_COLLECTIONS)
-                    raise ValueError(f"collection must be one of: {choices}")  # noqa: TRY301
+                    raise ValueError(f"collection 必须是以下之一：{choices}")  # noqa: TRY301
                 result: dict[str, Any] = {"collection": collection, "resyncing": True}
                 resync = collection
             else:
@@ -268,7 +268,7 @@ class TuiBackendServer:
             else MAX_COMMAND_BYTES
         )
         if len(raw) > maximum:
-            raise _MessageTooLargeError(f"TUI IPC message exceeds {maximum} bytes")
+            raise _MessageTooLargeError(f"TUI IPC 消息超过 {maximum} 字节")
         return raw
 
     @classmethod
@@ -289,7 +289,7 @@ class TuiBackendServer:
     async def _send(self, message: dict[str, Any]) -> None:
         connection = self._socket
         if connection is None:
-            raise ConnectionError("TUI IPC connection is closed")
+            raise ConnectionError("TUI IPC 连接已关闭")
         raw = self._encode(message)
         framed = _HEADER.pack(len(raw)) + raw
         async with self._write_lock:
@@ -310,7 +310,7 @@ class TuiBackendServer:
                         "command": command,
                         "error": {
                             "code": "result_too_large",
-                            "message": "Command result exceeds the terminal frame limit",
+                            "message": "命令结果超出终端帧上限",
                             "retryable": False,
                         },
                     },

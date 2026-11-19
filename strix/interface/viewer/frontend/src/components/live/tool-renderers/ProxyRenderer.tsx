@@ -43,7 +43,7 @@ function ListRequests({ args, result }: ToolRendererProps) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <span className="text-purple-400/80 font-semibold text-sm">listing requests</span>
+        <span className="text-purple-400/80 font-semibold text-sm">正在列出请求</span>
         {filter && <span className="text-[#888] text-[13px]">{trunc(filter, 150)}</span>}
       </div>
       {requests.length > 0 && (
@@ -62,7 +62,7 @@ function ListRequests({ args, result }: ToolRendererProps) {
               </div>
             );
           })}
-          {requests.length > 20 && <div className="text-[#555]">... +{requests.length - 20} more</div>}
+          {requests.length > 20 && <div className="text-[#555]">…… 另有 {requests.length - 20} 条</div>}
         </div>
       )}
     </div>
@@ -82,7 +82,7 @@ function ViewRequest({ args, result }: ToolRendererProps) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <span className="text-purple-400/80 font-semibold text-sm">{searchPattern ? "searching" : "viewing"} {part}</span>
+        <span className="text-purple-400/80 font-semibold text-sm">{searchPattern ? "正在搜索" : "正在查看"} {part}</span>
         {requestId != null && <span className="text-[#888] text-[13px]">#{requestId}</span>}
         {searchPattern && <span className="text-[#666] font-mono text-[13px]">/{trunc(searchPattern, 100)}/</span>}
       </div>
@@ -100,7 +100,7 @@ function ViewRequest({ args, result }: ToolRendererProps) {
               </div>
             );
           })}
-          {matches.length > 5 && <div className="text-[#555]">... +{matches.length - 5} more matches</div>}
+          {matches.length > 5 && <div className="text-[#555]">…… 另有 {matches.length - 5} 处匹配</div>}
         </div>
       )}
       {content && !matches.length && (() => {
@@ -109,7 +109,7 @@ function ViewRequest({ args, result }: ToolRendererProps) {
         const showMore = hasMore || lines.length > 15;
         return (
           <CodeBlock className="text-[#666]">
-            {display + (showMore ? "\n... more content available" : "")}
+            {display + (showMore ? "\n…… 还有更多内容" : "")}
           </CodeBlock>
         );
       })()}
@@ -132,7 +132,7 @@ function SendRequest({ args, result }: ToolRendererProps) {
 
   return (
     <div>
-      <span className="text-purple-400/80 font-semibold text-sm">request</span>
+      <span className="text-purple-400/80 font-semibold text-sm">正在请求</span>
       <div className="mt-1.5 font-mono text-[13px] space-y-0.5">
         <div>
           <span className="text-[#555] select-none mr-1">&gt;&gt;</span>
@@ -173,7 +173,7 @@ function RepeatRequest({ args, result }: ToolRendererProps) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <span className="text-purple-400/80 font-semibold text-sm">repeating request</span>
+        <span className="text-purple-400/80 font-semibold text-sm">正在重放请求</span>
         {requestId != null && <span className="text-[#888] text-[13px]">#{requestId}</span>}
       </div>
       {modifications && typeof modifications === "object" && Object.keys(modifications).length > 0 && (
@@ -198,16 +198,16 @@ function RepeatRequest({ args, result }: ToolRendererProps) {
 }
 
 const SCOPE_ACTION: Record<string, string> = {
-  get: "getting", list: "listing", create: "creating", update: "updating", delete: "deleting",
+  get: "获取", list: "列出", create: "创建", update: "更新", delete: "删除",
 };
 
 function ScopeRules({ args }: ToolRendererProps) {
   const action = (args.action as string) ?? "";
   const scopeName = (args.scope_name as string) ?? "";
-  const label = SCOPE_ACTION[action] ?? (action ? action : "managing");
+  const label = SCOPE_ACTION[action] ?? (action ? action : "管理");
   return (
     <div className="flex items-center gap-2">
-      <span className="text-purple-400/80 font-semibold text-sm">{label} proxy scope</span>
+      <span className="text-purple-400/80 font-semibold text-sm">正在{label}代理范围</span>
       {scopeName && <span className="text-[#888] text-[13px]">{trunc(scopeName, 50)}</span>}
     </div>
   );
@@ -217,8 +217,8 @@ function ListSitemap({ args }: ToolRendererProps) {
   const parentId = args.parent_id as string | undefined;
   return (
     <div className="flex items-center gap-2">
-      <span className="text-purple-400/80 font-semibold text-sm">listing sitemap</span>
-      {parentId && <span className="text-[#888] text-[13px]">under #{trunc(String(parentId), 20)}</span>}
+      <span className="text-purple-400/80 font-semibold text-sm">正在列出站点地图</span>
+      {parentId && <span className="text-[#888] text-[13px]">位于 #{trunc(String(parentId), 20)} 之下</span>}
     </div>
   );
 }
@@ -227,7 +227,7 @@ function ViewSitemapEntry({ args }: ToolRendererProps) {
   const entryId = args.entry_id as string | undefined;
   return (
     <div className="flex items-center gap-2">
-      <span className="text-purple-400/80 font-semibold text-sm">viewing sitemap entry</span>
+      <span className="text-purple-400/80 font-semibold text-sm">正在查看站点地图条目</span>
       {entryId && <span className="text-[#888] text-[13px]">#{trunc(String(entryId), 20)}</span>}
     </div>
   );
