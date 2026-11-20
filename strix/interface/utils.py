@@ -1130,11 +1130,36 @@ def _is_http_git_repo(url: str) -> bool:
         return False
 
 
+_TARGET_IME_FIXES = str.maketrans(
+    {
+        "：": ":",
+        "／": "/",
+        "．": ".",
+        "－": "-",
+        "\u3000": " ",
+        "\u200b": "",
+        "\u200c": "",
+        "\u200d": "",
+        "\ufeff": "",
+    }
+)
+
+
+def _normalize_target_input(target: str) -> str:
+    """Undo IME artifacts in a pasted or typed target.
+
+    Chinese input methods emit full-width punctuation (a wide colon for the ASCII colon) that is
+    visually identical but fails URL classification, and chat surfaces sometimes
+    carry zero-width joiners along with a copy.
+    """
+    return target.translate(_TARGET_IME_FIXES).strip()
+
+
 def infer_target_type(target: str) -> tuple[str, dict[str, str]]:  # noqa: PLR0911
     if not target or not isinstance(target, str):
         raise ValueError("Target must be a non-empty string")
 
-    target = target.strip()
+    target = _normalize_target_input(target.strip())
 
     if target.startswith("git@"):
         return "repository", {"target_repo": target}

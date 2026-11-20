@@ -245,3 +245,12 @@ def test_resume_non_object_run_json_exits(
     captured = capsys.readouterr()
     assert "run.json unreadable" in captured.err
     assert "不是对象" in captured.err
+
+
+def test_target_with_ime_fullwidth_punctuation_is_normalized() -> None:
+    """A wide colon from a Chinese IME must not fail target classification."""
+    from strix.interface.utils import infer_target_type
+
+    target_type, details = infer_target_type("http：//127.0.0.1：3000")
+    assert target_type == "web_application"
+    assert details["target_url"] == "http://127.0.0.1:3000"
