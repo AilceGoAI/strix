@@ -61,7 +61,7 @@ logger = logging.getLogger(__name__)
 
 _ROOT_SUBCOMMAND_HELP = """
 其他命令：
-  strix cloud ...          使用托管的 Strix 平台
+  strix local ...          本地版：运行历史、用户、调度、情报、通知、看板
   strix auth ...           管理模型订阅登录
   strix view [RUN]         查看已完成或正在运行的扫描
   strix completions SHELL  生成 zsh、bash 或 fish 的 Tab 补全
@@ -462,12 +462,14 @@ def main() -> None:
 
         sys.exit(run_completions(sys.argv[2:]))
 
-    # `strix cloud …` drives the managed platform (app.strix.ai) and exits;
-    # it needs no target, Docker, or scan setup.
-    if len(sys.argv) > 1 and sys.argv[1] == "cloud":
-        from strix.interface.cloud import run_cloud
+    # `strix local …` serves the self-hosted edition: run history, local users,
+    # scheduling, threat intel, notifications and a read-only dashboard.
+    # The managed `strix cloud …` entry point is intentionally absent on this
+    # branch; strix/interface/cloud stays in the tree so upstream merges stay clean.
+    if len(sys.argv) > 1 and sys.argv[1] == "local":
+        from strix.local.cli import run_local
 
-        sys.exit(run_cloud(sys.argv[2:]))
+        sys.exit(run_local(sys.argv[2:]))
 
     start_import_warmup()
 

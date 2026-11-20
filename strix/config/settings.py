@@ -175,7 +175,8 @@ class RuntimeSettings(BaseSettings):
 class TelemetrySettings(BaseSettings):
     model_config = _BASE_CONFIG
 
-    enabled: bool = Field(default=True, alias="STRIX_TELEMETRY")
+    # local-edition 默认关闭遥测, 需要时用 STRIX_TELEMETRY=1 显式打开。
+    enabled: bool = Field(default=False, alias="STRIX_TELEMETRY")
     run_record_timings: bool = Field(default=False, alias="STRIX_RUN_RECORD_TIMINGS")
 
 
