@@ -22,7 +22,12 @@ func main() {
 		fmt.Fprintln(os.Stderr, "协商 Strix TUI 协议：", err)
 		os.Exit(1)
 	}
-	program := tea.NewProgram(app.New(client), tea.WithAltScreen(), tea.WithMouseCellMotion())
+	program := tea.NewProgram(
+		app.New(client),
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+		tea.WithOutput(app.OutputWriter()),
+	)
 	finalModel, err := program.Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "运行 TUI：", err)

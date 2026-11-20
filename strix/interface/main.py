@@ -25,6 +25,7 @@ from strix.interface.cli_args import (
     resume_run_list_message,
     terminal_attached,
 )
+from strix.interface.edition import LOCAL_EDITION
 from strix.interface.environment import (
     check_docker_installed,
     pull_docker_image,
@@ -260,7 +261,7 @@ def display_completion_message(args: argparse.Namespace, results_path: Path) -> 
         "[#60a5fa]docs.strix.ai[/]  [dim]·[/]  "
         "[#60a5fa]discord.gg/strix-ai[/]"
     )
-    if not args.non_interactive:
+    if not args.non_interactive and not LOCAL_EDITION:
         console.print(
             "[dim]在 Strix Cloud 中运行渗透测试[/]  [#60a5fa]app.strix.ai[/]  [dim]·[/]  "
             "[dim]Enterprise[/]  [#60a5fa]strix.ai/demo[/]"

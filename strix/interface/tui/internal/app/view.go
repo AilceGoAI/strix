@@ -273,8 +273,10 @@ func (m Model) View() string {
 	// Park the terminal's real cursor on the composer caret. The composer draws
 	// its own block cursor as styled text, but the IME candidate window anchors
 	// to the hardware cursor, so without this an IME composition lands wherever
-	// the last frame write left it.
-	return view + m.composerCursorEscape()
+	// the last frame write left it. The anchor is applied by the output writer
+	// after the renderer finishes the frame (see cursor.go).
+	setCursorAnchor(m.composerCursorEscape())
+	return view
 }
 
 // composerCursorEscape returns a CUP sequence placing the hardware cursor on the
