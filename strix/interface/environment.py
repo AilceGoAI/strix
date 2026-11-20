@@ -2,6 +2,7 @@
 
 import logging
 import shutil
+import subprocess
 import sys
 
 from rich.console import Console
@@ -164,7 +165,8 @@ def validate_environment() -> None:
 
 
 def check_docker_installed() -> None:
-    if shutil.which("docker") is None:
+    docker_path = shutil.which("docker")
+    if docker_path is None:
         logger.debug("Docker CLI not found in PATH")
         console = Console()
         error_text = Text()
@@ -186,6 +188,48 @@ def check_docker_installed() -> None:
         report_error("docker_not_installed")
         sys.exit(1)
     logger.debug("Docker CLI present")
+    _require_docker_daemon(docker_path)
+
+
+def _require_docker_daemon(docker_path: str) -> None:
+    """Fail early, and in plain language, when the daemon behind the CLI is down.
+
+    Without this the first symptom is a raw socket error deep inside sandbox
+    startup ("Connection aborted, FileNotFoundError") after the user has already
+    waited through the model check.
+    """
+    try:
+        subprocess.run(  # noqa: S603 - fixed argv, absolute path resolved above
+            [docker_path, "info", "--format", "{{.ServerVersion}}"],
+            capture_output=True,
+            timeout=15,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
+        logger.debug("Docker daemon unreachable: %s", exc)
+        console = Console()
+        error_text = Text()
+        error_text.append("Docker 未运行", style="bold red")
+        error_text.append("\n\n", style="white")
+        error_text.append("'docker' 命令存在，但连不上守护进程。\n\n", style="white")
+        error_text.append("colima 用户：\n", style="bold white")
+        error_text.append("  colima start\n\n", style="cyan")
+        error_text.append("Docker Desktop 用户：\n", style="bold white")
+        error_text.append("  先启动 Docker Desktop，等图标变绿后重试\n\n", style="cyan")
+        error_text.append("确认连接：", style="white")
+        error_text.append("docker info\n", style="cyan")
+
+        panel = Panel(
+            error_text,
+            title="[bold white]STRIX",
+            title_align="left",
+            border_style="red",
+            padding=(1, 2),
+        )
+        console.print("\n", panel, "\n")
+        report_error("docker_daemon_unreachable")
+        sys.exit(1)
+    logger.debug("Docker daemon reachable")
 
 
 def pull_docker_image() -> None:
