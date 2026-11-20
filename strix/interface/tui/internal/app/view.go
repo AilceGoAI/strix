@@ -281,7 +281,11 @@ func (m Model) View() string {
 
 // composerCursorEscape returns a CUP sequence placing the hardware cursor on the
 // composer caret, or "" when the composer is not the focused, visible target.
+// Set STRIX_NO_CURSOR_ANCHOR=1 to disable the anchor for comparison.
 func (m Model) composerCursorEscape() string {
+	if os.Getenv("STRIX_NO_CURSOR_ANCHOR") != "" {
+		return ""
+	}
 	if !m.ready || m.showSplash || m.snapshot.SetupMode || m.modal != modalNone {
 		return ""
 	}
