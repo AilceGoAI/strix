@@ -244,4 +244,4 @@ def test_resume_non_object_run_json_exits(
     assert exc_info.value.code == 2
     captured = capsys.readouterr()
     assert "run.json unreadable" in captured.err
-    assert "not an object" in captured.err
+    assert "不是对象" in captured.err

@@ -11,6 +11,7 @@ from typing import cast
 from strix.config import apply_config_override
 from strix.config.settings import DEFAULT_MAX_TURNS
 from strix.core.paths import RUNS_DIR_NAME, run_dir_for, runtime_state_dir
+from strix.interface.edition import LOCAL_EDITION
 from strix.interface.scan_setup import attach_workspace_mount, build_targets_info
 from strix.interface.update_check import self_update
 from strix.interface.utils import (
@@ -120,6 +121,8 @@ Strix Cloud:
   试用 Strix Enterprise             https://strix.ai/demo
         """,
     )
+    if LOCAL_EDITION and parser.epilog:
+        parser.epilog = parser.epilog.split("\nStrix Cloud:")[0].rstrip()
 
     parser.add_argument(
         "-v",
