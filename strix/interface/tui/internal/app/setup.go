@@ -95,6 +95,11 @@ func looksLikeTarget(token string) bool {
 	if ip := net.ParseIP(token); ip != nil {
 		return true
 	}
+	// host:port, e.g. 192.168.5.2:3000 — the CLI accepts it as a target even
+	// without a scheme, so the start screen must not treat it as prose.
+	if host, port, ok := strings.Cut(token, ":"); ok && port != "" && net.ParseIP(host) != nil {
+		return true
+	}
 	host := token
 	if at := strings.LastIndex(host, "@"); at >= 0 {
 		host = host[at+1:]
