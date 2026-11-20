@@ -270,38 +270,7 @@ func (m Model) View() string {
 	for _, seq := range render.DrainImageTransmissions() {
 		_, _ = os.Stdout.WriteString(seq)
 	}
-	// Park the terminal's real cursor on the composer caret. The composer draws
-	// its own block cursor as styled text, but the IME candidate window anchors
-	// to the hardware cursor, so without this an IME composition lands wherever
-	// the last frame write left it. The anchor is applied by the output writer
-	// after the renderer finishes the frame (see cursor.go).
-	setCursorAnchor(m.composerCursorEscape())
 	return view
-}
-
-// composerCursorEscape returns a CUP sequence placing the hardware cursor on the
-// composer caret, or "" when the composer is not the focused, visible target.
-// Set STRIX_NO_CURSOR_ANCHOR=1 to disable the anchor for comparison.
-func (m Model) composerCursorEscape() string {
-	if os.Getenv("STRIX_NO_CURSOR_ANCHOR") != "" {
-		return ""
-	}
-	if !m.ready || m.showSplash || m.snapshot.SetupMode || m.modal != modalNone {
-		return ""
-	}
-	if m.focus != focusInput {
-		return ""
-	}
-	_, _, chatWidth, chatHeight := m.layout()
-	row := chatHeight
-	if m.statusVisible() {
-		row += len(strings.Split(m.statusView(chatWidth), "\n"))
-	}
-	row++ // composer's top border
-	info := m.input.LineInfo()
-	row += m.input.Line() + info.RowOffset
-	col := 1 /* border */ + 1 /* padding */ + 2 /* "> " prompt */ + info.ColumnOffset
-	return fmt.Sprintf("\x1b[%d;%dH", row+1, col+1)
 }
 
 func (m Model) viewInner() string {
