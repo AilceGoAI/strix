@@ -35,12 +35,13 @@ func (m *Model) submitSetupPrompt(value string) (tea.Model, tea.Cmd) {
 	fields := strings.Fields(value)
 	targets := 0
 	for _, field := range fields {
-		token := strings.Trim(field, ",;")
-		if !looksLikeTarget(token) || m.hasTarget(token) {
-			continue
+		for _, token := range extractTargets(field) {
+			if m.hasTarget(token) {
+				continue
+			}
+			targets++
+			commands = append(commands, send(m.client, "setup.add_target", map[string]any{"target": token}))
 		}
-		targets++
-		commands = append(commands, send(m.client, "setup.add_target", map[string]any{"target": token}))
 	}
 	if len(fields) > targets {
 		commands = append(commands, send(m.client, "setup.set_instruction", map[string]any{"instruction": value}))
@@ -114,6 +115,32 @@ func looksLikeTarget(token string) bool {
 }
 
 var domainPattern = regexp.MustCompile(`^([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]{2,}$`)
+
+// urlInText finds URL-shaped substrings inside a field. Chinese input arrives
+// without spaces, so "对http://host:port进行测试" is one whitespace-delimited
+// field; the URL has to be lifted out of it instead of rejecting the whole
+// token. The character class stops at the first non-ASCII rune.
+var urlInText = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.\-]*://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+`)
+
+const targetTrailingJunk = ".,;:)]}，。；：、）】》"
+
+// extractTargets returns the targets carried by one whitespace-delimited field.
+func extractTargets(field string) []string {
+	matches := urlInText.FindAllString(field, -1)
+	out := make([]string, 0, len(matches)+1)
+	for _, match := range matches {
+		if trimmed := strings.TrimRight(match, targetTrailingJunk); trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	if len(out) == 0 {
+		token := strings.Trim(field, ",;")
+		if looksLikeTarget(token) {
+			out = append(out, token)
+		}
+	}
+	return out
+}
 
 func isNumeric(value string) bool {
 	for _, char := range value {
