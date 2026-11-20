@@ -191,7 +191,7 @@ class TuiLiveView:
             "chat",
             {
                 "role": "assistant",
-                "content": (f"An error occurred: {error}\nI'm now waiting for new instructions."),
+                "content": (f"发生错误：{_friendly_error(error)}\n等待你的新指令。"),
                 "metadata": {"source": "agent_error"},
             },
         )
@@ -532,3 +532,13 @@ def _tool_status_from_result(result: Any) -> str:
     if isinstance(result, dict) and result.get("success") is False:
         return "failed"
     return "completed"
+
+
+def _friendly_error(error: str) -> str:
+    """Rewrite infrastructure failures that have an obvious next step."""
+    if "No such container" in error:
+        return (
+            "沙箱容器已不存在——通常是被外部删除，或者 Docker/colima 重启过。"
+            "本次运行无法继续，请重新发起扫描。"
+        )
+    return error
