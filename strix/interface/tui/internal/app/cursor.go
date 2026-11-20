@@ -31,6 +31,15 @@ type anchorWriter struct {
 	under io.Writer
 }
 
+// Fd exposes the underlying terminal so Bubble Tea's term.File assertion still
+// holds; without it the program skips TTY setup and renders a blank frame.
+func (w *anchorWriter) Fd() uintptr {
+	if f, ok := w.under.(interface{ Fd() uintptr }); ok {
+		return f.Fd()
+	}
+	return os.Stdout.Fd()
+}
+
 func (w *anchorWriter) Write(p []byte) (int, error) {
 	n, err := w.under.Write(p)
 	if anchor, ok := cursorAnchor.Load().(string); ok && anchor != "" && endsWithCursorMove(p) {
