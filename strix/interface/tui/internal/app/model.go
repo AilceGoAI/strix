@@ -288,7 +288,9 @@ func New(client *Client) Model {
 	}
 }
 
-func (m Model) Init() tea.Cmd { return tea.Batch(readWire(m.client), splashTick(), sweepTick()) }
+func (m Model) Init() tea.Cmd {
+	return tea.Batch(tea.ShowCursor, readWire(m.client), splashTick(), sweepTick())
+}
 
 // splashTick drives the splash "Starting Strix Agent" shimmer at Python's 0.1s cadence.
 func splashTick() tea.Cmd {
